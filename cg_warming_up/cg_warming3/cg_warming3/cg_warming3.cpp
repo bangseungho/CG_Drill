@@ -3,9 +3,13 @@
 #include <iostream>
 using namespace std;
 
-void ReverseWord(char str[]);
 void PrintInfo(char str[]);
+void ReverseWord(char str[]);
 void AddWord(char str[]);
+void ReverseJump(char str[]);
+void ChangeWord(char str[]);
+void Samesame(char str[]);
+static bool flag = false;
 
 int main()
 {
@@ -21,8 +25,12 @@ int main()
     
     fclose(fp);
 
+    PrintInfo(str);
+
     while (true)
     {
+        
+        cout << "input the command : ";
         cin >> input;
 
         if (input == 'q')
@@ -37,10 +45,13 @@ int main()
             AddWord(str);
             break;
         case 'f':
+            ReverseJump(str);
             break;
         case 'g':
+            ChangeWord(str);
             break;
         case 'h':
+            Samesame(str);
             break;
         }
 
@@ -73,17 +84,145 @@ void ReverseWord(char str[])
 void AddWord(char str[])
 {
     int cnt = 0;
+    int j = 0;
+    char temp[MAX]{};
+    
 
-    for (int i = 0; i <= strlen(str); i++)
+    if (flag == false)
     {
-        if (cnt % 4 == 0)
+        for (int i = 0; str[i] != '\0'; i++)
         {
-            str[i] = '@';
+            cnt++;
+            temp[j] = str[i];
+
+            if (cnt % 3 == 0)
+            {
+                temp[j + 1] = '@';
+                temp[j + 2] = '@';
+                j += 2;
+            }
+            j++;
         }
-        cnt++;
+
+        for (int i = strlen(temp) - 1; ; i--)
+        {
+            if (temp[i] == '@')
+                temp[i] = '\0';
+            else break;
+        }
+
+        for (int i = 0; temp[i] != '\0'; i++)
+        {
+            str[i] = temp[i];
+        }
+
+    }
+    else
+    {
+        for (int i = 0; str[i] != '\0'; i++)
+        {
+            if (str[i] == '@')
+            {
+                for (int j = i; str[j] != '\0'; j++)
+                {
+                    str[j] = str[j + 2];
+                    str[j + 1] = str[j + 3];
+                }
+            }
+        }
+    }
+
+    if (flag)
+        flag = false;
+    else if (flag == false)
+        flag = true;
+
+    PrintInfo(str);
+}
+
+void ReverseJump(char str[])
+{
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] != '@' && flag == true)
+        {
+            if (str[i] == ' ')
+            {
+                char temp = str[i + 1];
+                str[i + 1] = str[i + 2];
+                str[i + 2] = temp;
+            }
+            else if (str[i + 2] == ' ')
+            {
+                char temp = str[i];
+                str[i] = str[i + 1];
+                str[i + 1] = temp;
+            }
+            else
+            {
+                char temp = str[i];
+                str[i] = str[i + 2];
+                str[i + 2] = temp;
+            }
+            i += 2;
+        }
     }
 
     PrintInfo(str);
+}
+
+void ChangeWord(char str[])
+{
+    char old_word;
+    char new_word;
+
+    cout << "Enter the Word you want to change : ";
+    cin >> old_word;
+    cout << "Enter the new Word : ";
+    cin >> new_word;
+    cout << endl;
+
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] == old_word)
+            str[i] = new_word;
+    }
+
+    PrintInfo(str);
+}
+
+void Samesame(char str[])
+{
+    char temp[MAX] = {};
+    char sameword[MAX] = {};
+    int i = 0;
+    int index = 0;
+
+    for (;;)
+    {
+        if (str[i] == ' ' || str[i] == '\0')
+        {
+            index = 0;
+
+            for (int j = 0; temp[j] != '\0'; j++)
+            {
+                if (j > strlen(temp) / 2 - 1)
+                    break;
+
+                if (temp[j] == temp[strlen(temp) - j - 1])
+                    sameword[j] = temp[j];
+            }
+        }
+
+        temp[index++] = str[i];
+ 
+        if (str[i] == '\0')
+            break;
+
+        i++;
+    }
+
+    cout << sameword << endl;
 }
 
 void PrintInfo(char str[])
@@ -95,6 +234,6 @@ void PrintInfo(char str[])
         cout << str[i];
     }
 
-    cout << endl;
+    cout << endl << endl;
 }
 
