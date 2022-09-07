@@ -16,6 +16,8 @@ void trans_matrix(int a[][3]);
 
 int det_matrix(int a[][3]);
 
+void extension_matrix(int a[][3], int b[][3]);
+
 void printinfo(int c[][3]);
 
 
@@ -111,7 +113,11 @@ int main()
 			trans_matrix(b);
 
 			break;
+		case 'h':
 
+			extension_matrix(a, b);
+
+			break;
 		case 's':
 
 			new_matrix(a, b);
@@ -276,7 +282,46 @@ void trans_matrix(int a[][3])
 
 }
 
+void extension_matrix(int a[][3], int b[][3])
+{
+	int c[4][4]{};
+	int d[4][4]{};
 
+	for (int i = 0; i < 9; i++)
+	{
+		c[i / 3][i % 3] = a[i / 3][i % 3];
+		d[i / 3][i % 3] = b[i / 3][i % 3];
+	}
+
+	c[3][3] = 1;
+	d[3][3] = 1;
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (i % 4 == 0)
+
+			cout << endl;
+
+		cout << c[i / 4][i % 4] << " ";
+	}
+
+	cout << endl;
+
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (i % 4 == 0)
+
+			cout << endl;
+
+		cout << d[i / 4][i % 4] << " ";
+	}
+
+	cout << endl;
+	cout << endl;
+	det_matrix(a);
+	det_matrix(b);
+}
 
 void printinfo(int c[][3])
 
