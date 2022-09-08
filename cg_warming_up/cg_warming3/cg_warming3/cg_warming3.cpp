@@ -191,38 +191,100 @@ void ChangeWord(char str[])
     PrintInfo(str);
 }
 
+//void Samesame(char str[])
+//{
+//    char temp[MAX] = {};
+//    char sameword[MAX] = {};
+//    int i = 0;
+//    int index = 0;
+//
+//    for (;;)
+//    {
+//        if (str[i] == ' ' || str[i] == '\0' || str[i] == '\n')
+//        {
+//            index = 0;
+//
+//            for (int j = 0; temp[j] != '\0'; j++)
+//            {
+//                if (j > strlen(temp) / 2 - 1)
+//                    break;
+//
+//                if (temp[j] == temp[strlen(temp) - j - 1])
+//                {
+//                    sameword[j] = temp[j];
+//                    cout << sameword[j];
+//                }
+//            }
+//            cout << endl;
+//
+//        }
+//
+//        temp[index++] = str[i];
+// 
+//        if (str[i] == '\0')
+//            break;
+//
+//        i++;
+//    }
+//}
+
 void Samesame(char str[])
 {
-    char temp[MAX] = {};
-    char sameword[MAX] = {};
-    int i = 0;
+    char temp[100][100] = {};
+    char temp2[100][100] = {};
+
+
     int index = 0;
+    int index2 = 0;
 
-    for (;;)
+    for (int i = 0; str[i] != '\0'; i++)
     {
-        if (str[i] == ' ' || str[i] == '\0')
+        if (str[i] == ' ' || str[i] == '\n')
         {
-            index = 0;
-
-            for (int j = 0; temp[j] != '\0'; j++)
-            {
-                if (j > strlen(temp) / 2 - 1)
-                    break;
-
-                if (temp[j] == temp[strlen(temp) - j - 1])
-                    sameword[j] = temp[j];
-            }
+            index2 = 0;
+            index++;
+            continue;
         }
 
-        temp[index++] = str[i];
- 
-        if (str[i] == '\0')
-            break;
+        temp[index][index2++] = str[i];
 
-        i++;
     }
 
-    cout << sameword << endl;
+    for (int i = 0; i < 100; i++)
+    {
+        for (int j = 0; j < strlen(temp[i]); j++)
+        {
+            int a = 0;
+        }
+    }
+    
+    for (int i = 0; i < 100; i++)
+    {
+        int len = strlen(temp[i]);
+
+        for (int j = 0; j < strlen(temp[i]) / 2; j++)
+        {
+            if (temp[i][j] == temp[i][strlen(temp[i]) - 1 - j])
+            {
+                temp2[i][j] = temp[i][j];
+            }
+            else break;
+        }
+    }
+    for (int i = 0; i < 100; i++)
+    {
+        for (int j = 0; j < 100; j++)
+        {
+            if (temp2[i][j] != 0)
+            {
+                cout << temp2[i] << endl;
+                break;
+            }
+        }
+    }
+
+    cout << endl;
+
 }
 
 void PrintInfo(char str[])
