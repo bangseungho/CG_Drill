@@ -31,6 +31,18 @@ public:
 			_node[i] = new Node();
 		}
 	}
+	List(const List& c)
+	{
+		for (int i = 0; i < SIZE; i++)
+		{
+			_node[i] = (Node*)malloc(sizeof(Node));
+
+			for(int j = 0; j < DATA_NUM; j++)
+			_node[i]->_data[j] = c._node[i]->_data[j];
+
+			_node[i]->_InputData = c._node[i]->_InputData;
+		}
+	}
 
 	void AddData()
 	{
@@ -38,6 +50,15 @@ public:
 		{
 			int input;
 			cin >> input;
+
+			for (int j = 0; j < SIZE; j++)
+			{
+				if (_node[j]->_InputData == false)
+				{
+					_index = j;
+					break;
+				}
+			}
 
 			if (_index < 10)
 			{
@@ -52,7 +73,7 @@ public:
 		}
 	
 
-		for (int i = _index; i < 10; i++)
+		for (int i = _index; i < SIZE; i++)
 		{
 			if (_node[i]->_InputData == false)
 			{
@@ -65,7 +86,7 @@ public:
 
 	void DelData()
 	{
-		for (int i = 9; i >= 0; i--)
+		for (int i = SIZE - 1; i >= 0; i--)
 		{
 			if (_node[i]->_InputData)
 			{
@@ -168,10 +189,13 @@ public:
 		int min = 1000;
 		int j = 0;
 
+		GetTotalDate();
+
 		for (int i = 0; i < SIZE; i++)
 		{
-			if (_node[i]->_data[0] + _node[i]->_data[1] + _node[i]->_data[2] < min && _node[i]->_InputData)
+			if (_node[i]->_total < min && _node[i]->_InputData)
 			{
+				min = _node[i]->_total;
 				j = i;
 			}
 		}
@@ -192,7 +216,7 @@ public:
 	void SortDate()
 	{
 		GetTotalDate();
-			
+
 		for (int i = 0; i < SIZE; i++)
 		{
 			for (int j = i; j < SIZE; j++)
@@ -221,11 +245,8 @@ public:
 						_node[j] = temp;
 					}
 				}
-
 			}
 		}
-
-
 	}
 
 	void GetTotalDate()
@@ -262,6 +283,7 @@ int main()
 {
 	List li;
 
+	static bool trans = false;
 	char input;
 
 	while (1)
@@ -304,7 +326,19 @@ int main()
 			li.CloseData();
 			break;
 		case 's':
-			li.SortDate();
+			static List temp = li;
+
+			if(trans)
+			{
+				li = temp;
+				trans = false;
+			}
+			else
+			{
+				li.SortDate();
+				trans = true;
+			}
+
 			li.PrintInfo();
 			break;
 		}
