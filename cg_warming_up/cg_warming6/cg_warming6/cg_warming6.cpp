@@ -27,7 +27,7 @@ public:
 			if (cango())
 			_prev_dir = _dir;
 
-			if(rand() % 5 == 0)
+			if(rand() % 10 == 0)
 				_dir = rand() % 4;
 
 			if (cango())
@@ -74,6 +74,64 @@ public:
 				break;
 		}
 	
+	}
+
+	void reset()
+	{
+		for (int i = 0; i < SIZE * SIZE; i++)
+			_map[0][i] = 0;
+		x = 0;
+		y = 0;
+		_path_num = 1;
+		
+	}
+
+	void _move_left()
+	{
+		int temp[SIZE][SIZE];
+
+		for (int i = 0; i < SIZE; i++)
+		{
+			for (int j = 0; j < SIZE; j++)
+			{
+				if (j == 29)
+					temp[i][j] = _map[i][0];
+				else
+					temp[i][j] = _map[i][j + 1];
+			}
+		}
+
+		for (int i = 0; i < SIZE; i++)
+		{
+			for (int j = 0; j < SIZE; j++)
+			{
+				_map[i][j] = temp[i][j];
+			}
+		}
+	}
+
+	void _move_right()
+	{
+		int temp[SIZE][SIZE];
+
+		for (int i = 0; i < SIZE; i++)
+		{
+			for (int j = 0; j < SIZE; j++)
+			{
+				if (j == 0)
+					temp[i][j] = _map[i][29];
+				else
+					temp[i][j] = _map[i][j - 1];
+			}
+		}
+
+		for (int i = 0; i < SIZE; i++)
+		{
+			for (int j = 0; j < SIZE; j++)
+			{
+				_map[i][j] = temp[i][j];
+			}
+		}
 	}
 
 	bool cango()
@@ -156,8 +214,20 @@ int main()
 		switch (input)
 		{
 		case 's':
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+			cout << "===============================================================================================================================================================================================================" << endl << endl;
+			p.reset();
+			p.Init();
+			break;
+		case 'r':
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+			cout << "===============================================================================================================================================================================================================" << endl << endl;
+			p._move_right();
 			break;
 		case 'l':
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+			cout << "===============================================================================================================================================================================================================" << endl << endl;
+			p._move_left();
 			break;
 		}
 
