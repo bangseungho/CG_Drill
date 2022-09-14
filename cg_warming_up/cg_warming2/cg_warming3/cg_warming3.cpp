@@ -37,8 +37,8 @@ int main()
     cap_cnt = CountCapital(str);
 
     cout << "word count : " << word_cnt << endl;
-    cout << "number count : " << num_cnt << " " << "( " << ToNum.arr << " )" << endl;
-    cout << "capital count : " << cap_cnt << " " << "( " << ToCap.arr << " )" << endl;
+    cout << "number count : " << num_cnt << " " << "( " << ToNum.arr << ")" << endl;
+    cout << "capital count : " << cap_cnt << " " << "( " << ToCap.arr << ")" << endl;
 
     return 0;
 }
@@ -118,10 +118,12 @@ int CountCapital(char str[])
             ret++;
 
             for (int j = i; ; j++)
-            {
-                if (str[j - 2] >= 48 && str[j - 2] <= 57)
-                    break; // 3D
+            { // 3D
+                if (str[j - 2] >= 48 && str[i] <= 57)
+                    ToCap.arr[ToCap.index++] = str[j - 2];
+
                 ToCap.arr[ToCap.index++] = str[j -1 ];
+              
                 if (str[j] == ' ' || str[j] == '\n')
                 {
                     ToCap.arr[ToCap.index++] = ' ';

@@ -1,6 +1,6 @@
 ﻿  cg_warming3.cpp
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(67,26): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(107,9): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(263,34): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(292,26): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  cg_warming3.vcxproj -> C:\GitHub\Computer_Graphics\Computer_Graphics\cg_warming_up\cg_warming3\x64\Debug\cg_warming3.exe
+C:\Github\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(67,26): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Github\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(109,9): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Github\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(268,34): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Github\Computer_Graphics\cg_warming_up\cg_warming3\cg_warming3\cg_warming3.cpp(297,26): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  cg_warming3.vcxproj -> C:\Github\Computer_Graphics\cg_warming_up\cg_warming3\x64\Debug\cg_warming3.exe

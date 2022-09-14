@@ -93,9 +93,11 @@ void AddWord(char str[])
         for (int i = 0; str[i] != '\0'; i++)
         {
             cnt++;
+            if (str[i] == '\n')
+                cnt= 0;
             temp[j] = str[i];
 
-            if (cnt % 3 == 0)
+            if (cnt % 3 == 0 && str[i] != '\n' && str[i] != '.')
             {
                 temp[j + 1] = '@';
                 temp[j + 2] = '@';
@@ -144,8 +146,11 @@ void ReverseJump(char str[])
 {
     for (int i = 0; str[i] != '\0'; i++)
     {
-        if (str[i] != '@' && flag == true)
+        if (str[i] != '@' && flag == true && str[i] != '\n')
         {
+            if (str[i + 1] == '\n' || str[i + 2] == '\n' || str[i + 1] == '\0')
+                continue;
+
             if (str[i] == ' ')
             {
                 char temp = str[i + 1];

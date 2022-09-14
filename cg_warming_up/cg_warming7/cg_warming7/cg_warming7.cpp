@@ -208,7 +208,8 @@ int main()
 	char input1[2];
 	char input2[2];
 	int score = 0;
-	int cnt = 1;
+	int cnt = 8;
+	int perpect = 0;
 	Game game;
 
 	game.Init();
@@ -239,7 +240,7 @@ int main()
 			}
 
 			score = 0;
-			cnt = 0;
+			cnt = 10;
 			game.Init();
 		}
 		else
@@ -270,10 +271,29 @@ int main()
 			cout << "SCORE : " << score << " " << "남은 횟수 : " << 10 - cnt << endl;
 			cnt++;
 
+			perpect = 0;
+
+			for(int i = 1; i < COL; i++)
+				for (int j = 1; j < LOW; j++)
+				{
+					if (game._node[i][j]->_check == true)
+					{
+						perpect++;
+						if (perpect == 16)
+						{
+							cout << "Perpect!!!" << endl;
+							Sleep(2000);
+							exit(1);
+						}
+					}
+				}
+
+
 			if (cnt == 10)
 			{
-				cout << "게임이 종료됩니다." << endl;
-				break;
+				cout << "Game Over!!!" << endl;
+				Sleep(2000);
+				exit(1);
 			}
 		}
 	}
