@@ -208,7 +208,7 @@ int main()
 	char input1[2];
 	char input2[2];
 	int score = 0;
-	int cnt = 0;
+	int cnt = 1;
 	Game game;
 
 	game.Init();
@@ -217,7 +217,7 @@ int main()
 	{
 		cout << "input card 1 : ";
 		cin >> input1;
-
+		 
 		if (input1[0] == 'r')
 		{
 			cout << "Reset!" << endl;
@@ -256,6 +256,7 @@ int main()
 				game._node[input1[1] - 48][input1[0] - 96]->_check = true;
 				game._node[input2[1] - 48][input2[0] - 96]->_check = true;
 				score++;
+				cnt--;
 			}
 			else
 			{	
