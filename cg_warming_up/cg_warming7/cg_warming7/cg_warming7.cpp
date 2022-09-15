@@ -208,7 +208,7 @@ int main()
 	char input1[2];
 	char input2[2];
 	int score = 0;
-	int cnt = 8;
+	int cnt = 0;
 	int perpect = 0;
 	Game game;
 
@@ -240,7 +240,7 @@ int main()
 			}
 
 			score = 0;
-			cnt = 10;
+			cnt = 0;
 			game.Init();
 		}
 		else
@@ -248,7 +248,7 @@ int main()
 			cout << "input card 2 : ";
 			cin >> input2;
 			cout << endl << endl;
-
+			
 			game._node[input1[1] - 48][input1[0] - 96]->_check = true;
 			game._node[input2[1] - 48][input2[0] - 96]->_check = true;
 
@@ -263,6 +263,7 @@ int main()
 			{	
 				game.PrintInfo();
 				Sleep(2000);
+				system("cls");
 				game._node[input1[1] - 48][input1[0] - 96]->_check = false;
 				game._node[input2[1] - 48][input2[0] - 96]->_check = false;
 			}

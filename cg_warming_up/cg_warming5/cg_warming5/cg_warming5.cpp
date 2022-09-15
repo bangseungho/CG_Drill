@@ -17,7 +17,7 @@ public:
 public:
 	int _data[DATA_NUM];
 	bool _InputData;
-	int _distance;
+	double _distance;
 	int _total;
 };
 
@@ -259,13 +259,15 @@ public:
 
 	void PrintInfo()
 	{
+		GetDistance();
+
 		for (int i = SIZE - 1; i >= 0; i--)
 		{
 			cout << i << " : ";
 
 			if (_node[i]->_InputData)
 			{
-				cout << _node[i]->_data[0] << " " << _node[i]->_data[1] << " " << _node[i]->_data[2];
+				cout << _node[i]->_data[0] << " " << _node[i]->_data[1] << " " << _node[i]->_data[2] << " (length : " << _node[i]->_distance << ")";
 			}
 
 			cout << endl;

@@ -15,7 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cg_warming3.cpp">
+    <ClCompile Include="cg_warming2.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cg_warming3\cg_warming3\cg_warming3.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cg_warming4\cg_warming4\cg_warming4.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cg_warming5\cg_warming5\cg_warming5.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cg_warming6\cg_warming6\cg_warming6.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cg_warming7\cg_warming7\cg_warming7.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
