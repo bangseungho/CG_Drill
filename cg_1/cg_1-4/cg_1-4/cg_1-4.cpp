@@ -160,12 +160,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'R':
 	case 'r':
-		index--;
-
-		if (index < 0)
-			index = 0;
-
-		delete rec[index];
+		if (index > 0)
+		{
+			index--;
+			delete rec[index];
+		}
+		
 		break;
 	case 'Q':
 	case 'q':
@@ -203,9 +203,9 @@ void TimerFunction(int value)
 	{
 		for (int i = 0; i < index; i++)
 		{
-			if (rec[i]->_pos._x + 0.05f > 1.0f || rec[i]->_pos._x - 0.05f < -1.0f)
+			if (rec[i]->_pos._x + rec[i]->_transSize > 1.0f || rec[i]->_pos._x - rec[i]->_transSize < -1.0f)
 				rec[i]->_moveX *= -1;
-			if (rec[i]->_pos._y + 0.05f > 1.0f || rec[i]->_pos._y - 0.05f < -1.0f)
+			if (rec[i]->_pos._y + rec[i]->_transSize > 1.0f || rec[i]->_pos._y - rec[i]->_transSize < -1.0f)
 				rec[i]->_moveY *= -1;
 
 			rec[i]->Move(rec[i]->_moveX, rec[i]->_moveY);
