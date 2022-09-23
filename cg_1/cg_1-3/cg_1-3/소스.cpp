@@ -10,7 +10,8 @@ GLvoid Keyboard(unsigned char key, int x, int y);
 const int WindowWidth = 800;
 const int WindowHeight = 800;
 void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
-void Motion(int x, int y);void Mouse(int button, int state, int x, int y);
+void Motion(int x, int y);
+void Mouse(int button, int state, int x, int y);
 
 class Rec {
 public:
@@ -106,15 +107,25 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	}
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
-}GLfloat mx;
-GLfloat my;
+}
+
+GLfloat mx;
+GLfloat my;
+
 void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 {
 	int w = WindowWidth;
 	int h = WindowHeight;
 	*ox = (float)(x - (float)w / 2.0) * (float)(1.0 / (float)(w / 2.0));
 	*oy = -(float)(y - (float)h / 2.0) * (float)(1.0 / (float)(h / 2.0));
-}GLfloat lgap{ 0.0f };GLfloat bgap{ 0.0f };GLfloat rgap{ 0.0f };GLfloat tgap{ 0.0f };void Mouse(int button, int state, int x, int y)
+}
+
+GLfloat lgap{ 0.0f };
+GLfloat bgap{ 0.0f };
+GLfloat rgap{ 0.0f };
+GLfloat tgap{ 0.0f };
+
+void Mouse(int button, int state, int x, int y)
 {
 	// 윈도우 좌표에서 OpenGL좌표로 변환
 	
