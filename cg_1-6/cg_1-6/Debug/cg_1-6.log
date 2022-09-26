@@ -1,0 +1,4 @@
+﻿  cg_1-6.cpp
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1-6\cg_1-6\cg_1-6.cpp(32,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1-6\cg_1-6\cg_1-6.cpp(159,10): warning C4101: 'errorLog' :참조되지 않은 지역 변수입니다.
+  cg_1-6.vcxproj -> C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1-6\Debug\cg_1-6.exe
