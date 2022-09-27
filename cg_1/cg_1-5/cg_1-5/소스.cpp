@@ -3,7 +3,9 @@
 #include <gl/glew.h> // 필요한 헤더파일 include
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
+#include <math.h>
 
+#define Pi 3.141592
 #define RANDPOSITION d(dre)
 using namespace std;
 
@@ -11,9 +13,10 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 const int WindowWidth = 800;
 const int WindowHeight = 800;
+void TimerFunction(int value);
 void Init();
 
-std::random_device rd;
+random_device rd;
 default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
 
@@ -30,12 +33,20 @@ public:
 		GLfloat _y;
 	};
 
+	struct Dir {
+		GLfloat _x;
+		GLfloat _y;
+	};
+
 	Color _color;
 	Position _pos;
 	GLfloat _size;
+	Dir _dir;
+	int _life;
+	BOOL _collision;
 
 public:
-	Rec(GLfloat _x, GLfloat _y) : _pos{ _x, _y }, _size(0.015f) { _color = { RANDPOSITION, RANDPOSITION, RANDPOSITION }; }
+	Rec(GLfloat _x, GLfloat _y) : _pos{ _x, _y }, _size(0.035f) { _color = { RANDPOSITION, RANDPOSITION, RANDPOSITION }; _dir = { RANDPOSITION, RANDPOSITION }; _life = 3; _collision = false; }
 	void DrawObject() { glColor3f(_color._r, _color._g, _color._b); glRectf(_pos._x - _size, _pos._y - _size, _pos._x + _size, _pos._y + _size); }
 };
 
@@ -72,6 +83,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene); // 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 콜백함수 지정
 	glutKeyboardFunc(Keyboard); // 키보드 입력 콜백함수 지정
+	glutTimerFunc(100, TimerFunction, 1);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 	glutMainLoop(); // 이벤트 처리 시작
@@ -153,7 +165,7 @@ void Mouse(int button, int state, int x, int y)
 					my >= rec[i]->_pos._y - rec[i]->_size && my <= rec[i]->_pos._y + rec[i]->_size)
 				{
 					index = i;
-					rec[index]->_size = 0.04f;
+					rec[index]->_size = 0.065f;
 					
 					left_button = true;
 
@@ -169,7 +181,6 @@ void Mouse(int button, int state, int x, int y)
 		}
 	}
 }
-
 
 void Motion(int x, int y)
 {
@@ -190,11 +201,46 @@ void Motion(int x, int y)
 				rec[index]->_pos._y - rec[index]->_size < rec[i]->_pos._y + rec[i]->_size &&
 				rec[index]->_pos._y + rec[index]->_size > rec[i]->_pos._y + rec[i]->_size)
 			{
-				rec[i] = nullptr;
-				delete rec[i];
+				if (rec[i]->_collision == false)
+				{
+					rec[i]->_life -= 1;
+					rec[i]->_size -= 0.01;
+					rec[i]->_collision = true;
+				}
+
+				if (rec[i]->_life == 0)
+				{
+					rec[i] = nullptr;
+					delete rec[i];
+				}
 			}
+			else
+				rec[i]->_collision = false;
+
 		}
 	}
 
 	glutPostRedisplay();
+}
+
+static int a = 0;
+
+void TimerFunction(int value)
+{
+	for (int i = 0; i < 100; ++i)
+	{
+		if (rec[i] != nullptr && i != index) {
+
+			if (rec[i]->_pos._x + rec[i]->_size > 1.0f || rec[i]->_pos._x - rec[i]->_size < -1.0f)
+				rec[i]->_dir._x *= -1;
+			if (rec[i]->_pos._y + rec[i]->_size > 1.0f || rec[i]->_pos._y - rec[i]->_size < -1.0f)
+				rec[i]->_dir._y *= -1;
+
+			rec[i]->_pos._x += rec[i]->_dir._x / 100;
+			rec[i]->_pos._y += rec[i]->_dir._y / 100;
+		}
+	}
+
+	glutPostRedisplay(); // 화면 재 출력
+	glutTimerFunc(100, TimerFunction, 1);
 }
