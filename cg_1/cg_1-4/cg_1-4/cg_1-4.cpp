@@ -31,7 +31,9 @@ public:
 
 	Color _color;
 	Position _pos;
-	static Animation _animation;
+	static Animation _animation1;
+	static Animation _animation2;
+	static Animation _animation3;
 	GLfloat _moveX = 0.01f;
 	GLfloat _moveY = 0.01f;
 	GLfloat _transSize = 0.05f;
@@ -58,7 +60,9 @@ void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
  GLfloat mx;
  GLfloat my;
  static int index = 0;
- Rec::Animation _animation = Rec::Animation::stop;
+ Rec::Animation _animation1 = Rec::Animation::stop;
+ Rec::Animation _animation2 = Rec::Animation::stop;
+ Rec::Animation _animation3 = Rec::Animation::stop;
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
@@ -114,11 +118,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	{
 	case 'A':
 	case 'a':
-		if (_animation == Rec::Animation::cross)
-			_animation = Rec::Animation::stop;
+		if (_animation1 == Rec::Animation::cross)
+			_animation1 = Rec::Animation::stop;
 		else
 		{
-			_animation = Rec::Animation::cross;
+			_animation1 = Rec::Animation::cross;
 			for (int i = 0; i < index; ++i)
 			{
 				rec[i]->_moveX = 0.01f;
@@ -128,11 +132,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'I':
 	case 'i':
-		if (_animation == Rec::Animation::zigzag)
-			_animation = Rec::Animation::stop;
+		if (_animation2 == Rec::Animation::zigzag)
+			_animation2 = Rec::Animation::stop;
 		else
 		{
-			_animation = Rec::Animation::zigzag;
+			_animation2 = Rec::Animation::zigzag;
 			for (int i = 0; i < index; ++i)
 			{
 				rec[i]->_moveX = 0.05f;
@@ -142,16 +146,18 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'C':
 	case 'c':
-		if (_animation == Rec::Animation::size)
-			_animation = Rec::Animation::stop;
+		if (_animation3 == Rec::Animation::size)
+			_animation3 = Rec::Animation::stop;
 		else
 		{
-			_animation = Rec::Animation::size;
+			_animation3 = Rec::Animation::size;
 		}
 		break;
 	case 'S':
 	case 's':
-		_animation = Rec::Animation::stop;
+		_animation1 = Rec::Animation::stop;
+		_animation2 = Rec::Animation::stop;
+		_animation3 = Rec::Animation::stop;
 		break;
 	case 'M':
 	case 'm':
@@ -199,7 +205,7 @@ void Mouse(int button, int state, int x, int y)
 
 void TimerFunction(int value)
 {
-	if (_animation == Rec::Animation::cross)
+	if (_animation1 == Rec::Animation::cross)
 	{
 		for (int i = 0; i < index; i++)
 		{
@@ -211,7 +217,7 @@ void TimerFunction(int value)
 			rec[i]->Move(rec[i]->_moveX, rec[i]->_moveY);
 		}
 	}
-	if (_animation == Rec::Animation::zigzag)
+	if (_animation2 == Rec::Animation::zigzag)
 	{
 		static int zigzag_cnt = 0;
 		for (int i = 0; i < index; i++)
@@ -232,7 +238,7 @@ void TimerFunction(int value)
 			rec[i]->Move(rec[i]->_moveX, rec[i]->_moveY);
 		}
 	}
-	if (_animation == Rec::Animation::size)
+	if (_animation3 == Rec::Animation::size)
 	{
 		for (int i = 0; i < index; i++)
 		{
