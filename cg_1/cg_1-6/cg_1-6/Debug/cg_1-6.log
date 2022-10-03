@@ -1,3 +1,17 @@
 ﻿  cg_1-6.cpp
-C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(156,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(78,1): warning C4305: '초기화 중': 'double'에서 'const GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(183,34): warning C4305: '인수': 'double'에서 'GLclampf'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(267,33): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(268,33): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(269,33): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(273,33): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(274,33): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(275,33): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(278,39): warning C4305: '=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(292,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(301,29): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(302,28): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(303,30): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(304,29): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-6\cg_1-6\cg_1-6.cpp(309,29): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
   cg_1-6.vcxproj -> C:\Github\Computer_Graphics\cg_1\cg_1-6\Debug\cg_1-6.exe
