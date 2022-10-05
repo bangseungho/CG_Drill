@@ -1,0 +1,6 @@
+﻿  소스.cpp
+C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(39,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(140,34): warning C4305: '인수': 'double'에서 'GLclampf'(으)로 잘립니다.
+C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(209,25): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(214,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+  cg_1-7.vcxproj -> C:\Users\BaekSeungHo\Desktop\cg_1-7\Debug\cg_1-7.exe
