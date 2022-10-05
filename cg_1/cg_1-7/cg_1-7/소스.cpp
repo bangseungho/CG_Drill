@@ -12,34 +12,51 @@ using namespace std;
 GLchar* vertexsource, * fragmentsource; //--- 소스코드 저장 변수
 GLuint vertexshader, fragmentshader; //--- 세이더 객체
 GLvoid Reshape(int w, int h);
-GLuint VAO, VBO, EBO;
+GLuint VAO, VBO_position, VBO_color;
 static bool DrawLine = false;
 GLfloat mx;
 GLfloat my;
 random_device rd;
 default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
+uniform_real_distribution<float> dis(-0.005, 0.005);
+uniform_real_distribution<float> cd(0.0, 1.0);
+static int tri_index;
 
 GLfloat vertexData[] = { //--- 삼각형 위치 값
 	-0.5, 0.8, 0.0, // 맨 위
-	-0.7, 0.4, 0.0, // 왼쪽
-	-0.3, 0.4, 0.0, // 오른쪽
+	-0.6, 0.4, 0.0, // 왼쪽
+	-0.4, 0.4, 0.0, // 오른쪽
 
 	0.5,  0.8, 0.0,
-	0.3,  0.4, 0.0,
-	0.7,  0.4, 0.0,
+	0.4,  0.4, 0.0,
+	0.6,  0.4, 0.0,
 
 	-0.5, -0.4, 0.0,
-	-0.7, -0.8, 0.0,
-	-0.3, -0.8, 0.0,
+	-0.6, -0.8, 0.0,
+	-0.4, -0.8, 0.0,
 
 	0.5, -0.4, 0.0,
-	0.7, -0.8, 0.0,
-	0.3, -0.8, 0.0,
+	0.4, -0.8, 0.0,
+	0.6, -0.8, 0.0,
 };
 
-unsigned int index[] = {
-	0, 1, 2,
+GLfloat colorData[] = { //--- 삼각형 위치 값
+	1.0, 0.0, 0.0,
+	1.0, 0.0, 0.0,
+	1.0, 0.0, 0.0,
+	
+	0.0, 1.0, 0.0,
+	0.0, 1.0, 0.0,
+	0.0, 1.0, 0.0,
+
+	0.0, 0.0, 1.0,
+	0.0, 0.0, 1.0,
+	0.0, 0.0, 1.0,
+
+	0.4, 0.0, 0.3,
+	0.4, 0.0, 0.3,
+	0.4, 0.0, 0.3,
 };
 
 char* filetobuf(const char* file)
@@ -58,6 +75,38 @@ char* filetobuf(const char* file)
 	fclose(fptr); // Close the file 
 	buf[length] = 0; // Null terminator 
 	return buf; // Return the buffer 
+}
+
+void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
+{
+	int w = 800;
+	int h = 800;
+	*ox = (float)(x - (float)w / 2.0) * (float)(1.0 / (float)(w / 2.0));
+	*oy = -(float)(y - (float)h / 2.0) * (float)(1.0 / (float)(h / 2.0));
+}
+
+void MoveVertex(int tri_index, GLfloat moveX, GLfloat moveY)
+{
+	for (int i{ 0 }; i < 3; ++i)
+	{
+		vertexData[tri_index * 9 + i * 3] += moveX;
+		vertexData[tri_index * 9 + i * 3 + 1] += moveY;
+	}
+}
+
+void RotateVertex(int digree, int index)
+{
+	float center_x = vertexData[index * 9];
+	float center_y = vertexData[index * 9 + 4];
+
+	vertexData[index * 9 + 0] = center_x + 0.4 * sin(digree / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 1] = center_y + 0.4 * cos(digree / 360.0 * 2 * 3.141592);
+
+	vertexData[index * 9 + 3] = center_x + 0.1 * sin((digree - 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 4] = center_y + 0.1 * cos((digree - 90) / 360.0 * 2 * 3.141592);
+
+	vertexData[index * 9 + 6] = center_x + 0.1 * sin((digree + 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 7] = center_y + 0.1 * cos((digree + 90) / 360.0 * 2 * 3.141592);
 }
 
 void make_vertexShader()
@@ -102,21 +151,26 @@ void make_fragmentShader()
 	}
 }
 
+GLuint s_program;
+
 void InitBuffer()
 {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
+	glGenBuffers(1, &VBO_position);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
+	glGenBuffers(1, &VBO_color);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colorData), colorData, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
 }
 
-GLuint s_program;
 
 void InitShader()
 {
@@ -158,10 +212,48 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 	glViewport(0, 0, w, h);
 }
 
+static GLfloat randMove[8];
+
 void TimerFunction(int value)
 {
+
+	for (int i = 0; i < 4; ++i)
+	{
+		MoveVertex(i, randMove[i], randMove[i + 4]);
+
+		for (int j = 0; j < 3; j++)
+		{
+			if (vertexData[i * 9 + j * 3] <= -1.0)
+			{
+				randMove[i] *= -1;
+				RotateVertex(90, i);
+				break;
+			}
+			else if (vertexData[i * 9 + j * 3] >= 1.0)
+			{
+				randMove[i] *= -1;
+				RotateVertex(270, i);
+				break;
+			}
+			else if (vertexData[i * 9 + j * 3 + 1] <= -1.0)
+			{
+				randMove[i + 4] *= -1;
+				RotateVertex(0, i);
+				break;
+			}
+			else if (vertexData[i * 9 + j * 3 + 1] >= 1.0)
+			{
+				randMove[i + 4] *= -1;
+				RotateVertex(180, i);
+				break;
+			}
+		}
+	}
+		
+	InitBuffer();
+
 	glutPostRedisplay();
-	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(10, TimerFunction, 1);
 }
 
 void Keyboard(unsigned char key, int x, int y)
@@ -181,32 +273,29 @@ void Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
-{
-	int w = 800;
-	int h = 800;
-	*ox = (float)(x - (float)w / 2.0) * (float)(1.0 / (float)(w / 2.0));
-	*oy = -(float)(y - (float)h / 2.0) * (float)(1.0 / (float)(h / 2.0));
-}
-
-void MoveVertex(int tri_index, GLfloat moveX, GLfloat moveY)
-{
-	for (int i{ 0 }; i < 3; ++i)
-	{
-		vertexData[tri_index * 9 + i * 3] += moveX;
-		vertexData[tri_index * 9 + i * 3 + 1] += moveY;
-	}
-
-	InitBuffer();
-}
-
 void Mouse(int button, int state, int x, int y)
 {
 	convertDeviceXYOpenGlXY(x, y, &mx, &my);
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		MoveVertex(0, 0.1, 0.1);
+		vertexData[tri_index * 9 + 0 * 3] = mx;
+		vertexData[tri_index * 9 + 0 * 3 + 1] = my + 0.2;
+		vertexData[tri_index * 9 + 1 * 3] = mx - 0.1;
+		vertexData[tri_index * 9 + 1 * 3 + 1] = my - 0.2;
+		vertexData[tri_index * 9 + 2 * 3] = mx + 0.1;
+		vertexData[tri_index * 9 + 2 * 3 + 1] = my - 0.2;
+
+		for (int i{ 0 }; i < 3; ++i)
+		{
+			float randColor = cd(dre);
+
+			for (int j{ 0 }; j < 3; ++j)
+				colorData[tri_index * 9 + j * 3 + i] = randColor;
+		}
+
+		InitBuffer();
+		tri_index = (tri_index + 1) % 4;
 	}
 }
 
@@ -223,6 +312,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glewInit();
 	InitShader();
 	InitBuffer();
+
+	for (int i = 0; i < 8; i++)
+		randMove[i] = dis(dre);
+
 	glutDisplayFunc(drawScene);
 	glutMouseFunc(Mouse);
 	glutReshapeFunc(Reshape);
@@ -230,4 +323,3 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutKeyboardFunc(Keyboard);
 	glutMainLoop();
 }
-
