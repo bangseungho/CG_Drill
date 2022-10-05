@@ -13,7 +13,9 @@ GLchar* vertexsource, * fragmentsource; //--- 소스코드 저장 변수
 GLuint vertexshader, fragmentshader; //--- 세이더 객체
 GLvoid Reshape(int w, int h);
 GLuint VAO, VBO_position, VBO_color;
+GLuint VBO_rec_position;
 static bool DrawLine = false;
+static bool StartMoveCross = false;
 GLfloat mx;
 GLfloat my;
 random_device rd;
@@ -39,6 +41,11 @@ GLfloat vertexData[] = { //--- 삼각형 위치 값
 	0.5, -0.4, 0.0,
 	0.4, -0.8, 0.0,
 	0.6, -0.8, 0.0,
+
+   -0.6, 0.3, 0.0,
+    0.6, 0.3, 0.0,
+    0.6, -0.3, 0.0,
+   -0.6, -0.3, 0.0
 };
 
 GLfloat colorData[] = { //--- 삼각형 위치 값
@@ -57,6 +64,11 @@ GLfloat colorData[] = { //--- 삼각형 위치 값
 	0.4, 0.0, 0.3,
 	0.4, 0.0, 0.3,
 	0.4, 0.0, 0.3,
+
+	1.0, 1.0, 1.0,
+	1.0, 1.0, 1.0,
+	1.0, 1.0, 1.0,
+	1.0, 1.0, 1.0,
 };
 
 char* filetobuf(const char* file)
@@ -201,7 +213,10 @@ GLvoid drawScene()
 	glBindVertexArray(VAO);
 
 	//--- 삼각형 그리기
-	glDrawArrays(GL_TRIANGLES, 0, sizeof(vertexData) / 3);
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+
+	glPointSize(10);
+	glDrawArrays(GL_LINE_LOOP, 12, 4);
 
 	//--- 화면에 출력하기
 	glutSwapBuffers();
@@ -216,40 +231,41 @@ static GLfloat randMove[8];
 
 void TimerFunction(int value)
 {
-
-	for (int i = 0; i < 4; ++i)
+	if (StartMoveCross)
 	{
-		MoveVertex(i, randMove[i], randMove[i + 4]);
-
-		for (int j = 0; j < 3; j++)
+		for (int i = 0; i < 4; ++i)
 		{
-			if (vertexData[i * 9 + j * 3] <= -1.0)
+			MoveVertex(i, randMove[i], randMove[i + 4]);
+
+			for (int j = 0; j < 3; j++)
 			{
-				randMove[i] *= -1;
-				RotateVertex(90, i);
-				break;
-			}
-			else if (vertexData[i * 9 + j * 3] >= 1.0)
-			{
-				randMove[i] *= -1;
-				RotateVertex(270, i);
-				break;
-			}
-			else if (vertexData[i * 9 + j * 3 + 1] <= -1.0)
-			{
-				randMove[i + 4] *= -1;
-				RotateVertex(0, i);
-				break;
-			}
-			else if (vertexData[i * 9 + j * 3 + 1] >= 1.0)
-			{
-				randMove[i + 4] *= -1;
-				RotateVertex(180, i);
-				break;
+				if (vertexData[i * 9 + j * 3] <= -1.0)
+				{
+					randMove[i] *= -1;
+					RotateVertex(90, i);
+					break;
+				}
+				else if (vertexData[i * 9 + j * 3] >= 1.0)
+				{
+					randMove[i] *= -1;
+					RotateVertex(270, i);
+					break;
+				}
+				else if (vertexData[i * 9 + j * 3 + 1] <= -1.0)
+				{
+					randMove[i + 4] *= -1;
+					RotateVertex(0, i);
+					break;
+				}
+				else if (vertexData[i * 9 + j * 3 + 1] >= 1.0)
+				{
+					randMove[i + 4] *= -1;
+					RotateVertex(180, i);
+					break;
+				}
 			}
 		}
 	}
-
 	InitBuffer();
 
 	glutPostRedisplay();
@@ -260,9 +276,12 @@ void Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 'a':
-	case 'A':
-		DrawLine = false;
+	case 'o':
+	case 'O':
+		if (StartMoveCross)
+			StartMoveCross = false;
+		else 
+			StartMoveCross = true;
 		break;
 	case 'b':
 	case 'B':
