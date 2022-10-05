@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <random>
 using namespace std;
 
 GLchar* vertexsource, * fragmentsource; //--- 소스코드 저장 변수
@@ -20,13 +21,18 @@ void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
 static GLfloat theta = 0;
 static GLfloat radius = 0;
 static int cnt = 0;
+random_device rd;
+default_random_engine dre(rd());
+uniform_real_distribution<float> d(-1.0, 1.0);
+GLfloat back_ground_r = d(dre);
+GLfloat back_ground_g = d(dre);
+GLfloat back_ground_b = d(dre);
 
-GLfloat point[] = { //--- 삼각형 위치 값
- -0.5, -0.5, 0.0
+GLfloat point[480] = { 	//--- 삼각형 위치 값
 };
 
 const GLfloat colors[] = { //--- 삼각형 꼭지점 색상
- 1.0, 0.0, 0.0
+ 1.0, 1.0, 1.0
 };
 
 char* filetobuf(const char* file)
@@ -98,16 +104,16 @@ void InitBuffer()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	//--- 변수 diamond 에서 버텍스 데이터 값을 버퍼에 복사한다.
 	//--- triShape 배열의 사이즈: 9 * float
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), point, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(point), point, GL_STATIC_DRAW);
 	//--- 좌표값을 attribute 인덱스 0번에 명시한다: 버텍스 당 3* float
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
 	//--- attribute 인덱스 0번을 사용가능하게 함
 	glEnableVertexAttribArray(0);
 	//--- 2번째 VBO를 활성화 하여 바인드 하고, 버텍스 속성 (색상)을 저장
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	//--- 변수 colors에서 버텍스 색상을 복사한다.
 	//--- colors 배열의 사이즈: 9 *float 
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
 	//--- 색상값을 attribute 인덱스 1번에 명시한다: 버텍스 당 3*float
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	//--- attribute 인덱스 1번을 사용 가능하게 함.
@@ -135,7 +141,7 @@ void InitShader()
 GLvoid drawScene()
 {
 	//--- 변경된 배경색 설정
-	glClearColor(0.0, 0.0, 0.0, 1.0f);
+	glClearColor(back_ground_r, back_ground_g, back_ground_b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(s_program);
@@ -159,43 +165,102 @@ void Mouse(int button, int state, int x, int y)
 {
 	convertDeviceXYOpenGlXY(x, y, &mx, &my);
 
-	static int value_theta = 5;
-	static GLfloat value_radius = 0.001;
-
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
+		int value_theta = 20;
+		GLfloat value_radius = 0.005;
 		mouse_flag = true;
 		theta = 0;
 		radius = 0;
+		cnt = 0;
+		int j = 0;
 
-		for (int i = 0; i < 100; ++i)
+		back_ground_r = d(dre);
+		back_ground_g = d(dre);
+		back_ground_b = d(dre);
+
+		int vColor = glGetUniformLocation(s_program, "select_Color");
+		glUseProgram(s_program);
+		srand(unsigned int(time(nullptr)));
+		int randValue = rand() % 2;
+
+		if (randValue == 0)
 		{
-			point[i++] = mx + radius * sin(theta / 360 * 2 * pi);
-			point[i++] = my + radius * cos(theta / 360 * 2 * pi);
+			glUniform3f(vColor, 1.0, 0.0, 0.0);
 
-			if (radius > 0.5 || radius < 0)
+			for (int i = 0; i < 120; i++)
 			{
-				value_radius *= -1;
-			}
+				if (i == 60)
+				{
+					mx += 0.585;
+					my += 0.05;
+					theta = 190;
+					value_radius *= -1;
+					value_theta = 20;
+				}
 
-			theta += value_theta;
-			radius += value_radius;
+				if (i < 60)
+				{
+					point[j] = mx + radius * sin(theta / 360 * 2 * pi);
+					point[j + 1] = my + radius * cos(theta / 360 * 2 * pi);
+				}
+				else
+				{
+					point[j] = mx + radius * cos(theta / 360 * 2 * pi);
+					point[j + 1] = my + radius * sin(theta / 360 * 2 * pi);
+				}
+
+				j += 3;
+				theta += value_theta;
+				radius += value_radius;
+			}
 		}
+		else
+		{
+			glUniform3f(vColor, 1.0, 1.0, 1.0);
+
+			theta = 270;
+			for (int i = 0; i < 120; i++)
+			{
+				if (i == 60)
+				{
+					mx += 0.585;
+					theta = 270;
+					value_radius *= -1;
+					value_theta = 20;
+				}
+
+				if (i < 60)
+				{
+					point[j] = mx + radius * cos(theta / 360 * 2 * pi);
+					point[j + 1] = my + radius * sin(theta / 360 * 2 * pi);
+				}
+				else
+				{
+					point[j] = mx + radius * sin(theta / 360 * 2 * pi);
+					point[j + 1] = my + radius * cos(theta / 360 * 2 * pi);
+				}
+
+				j += 3;
+				theta += value_theta;
+				radius += value_radius;
+			}
+		}
+	
 	}
 }
 
 void TimerFunction(int value)
 {
-
-
 	if (mouse_flag)
 	{
-
+		if(cnt < 120)
+			cnt++;
 	}
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), point, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(point), point, GL_STATIC_DRAW);
 
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
