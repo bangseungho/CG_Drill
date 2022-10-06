@@ -1,22 +1,22 @@
 ﻿  소스.cpp
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(22,51): warning C4305: '인수': 'double'에서 '_Ty'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(22,51): warning C4305: '인수': 'double'에서 '_Ty'(으)로 잘립니다.
           with
           [
               _Ty=float
           ]
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(42,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(60,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(102,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(103,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(105,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(106,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(108,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(109,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(194,34): warning C4305: '인수': 'double'에서 'GLclampf'(으)로 잘립니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(283,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(284,42): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(285,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(286,42): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(287,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Github\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(303,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
-  cg_1-7.vcxproj -> C:\Github\Computer_Graphics\cg_1\cg_1-7\Debug\cg_1-7.exe
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(42,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(60,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(102,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(103,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(105,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(106,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(108,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(109,39): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(194,34): warning C4305: '인수': 'double'에서 'GLclampf'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(283,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(284,42): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(285,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(286,42): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(287,46): warning C4244: '=': 'double'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\cg_1-7\소스.cpp(303,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+  cg_1-7.vcxproj -> C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-7\Debug\cg_1-7.exe

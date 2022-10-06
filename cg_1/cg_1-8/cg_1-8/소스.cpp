@@ -1,6 +1,6 @@
-#define _CRT_SECURE_NO_WARNINGS
+ï»¿#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <gl/glew.h> // ÇÊ¿äÇÑ Çì´õÆÄÀÏ include
+#include <gl/glew.h> // í•„ìš”í•œ í—¤ë”íŒŒì¼ include
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
 #include <stdlib.h>
@@ -9,46 +9,51 @@
 #include <random>
 using namespace std;
 
-GLchar* vertexsource, * fragmentsource; //--- ¼Ò½ºÄÚµå ÀúÀå º¯¼ö
-GLuint vertexshader, fragmentshader; //--- ¼¼ÀÌ´õ °´Ã¼
+GLchar* vertexsource, * fragmentsource; //--- ì†ŒìŠ¤ì½”ë“œ ì €ì¥ ë³€ìˆ˜
+GLuint vertexshader, fragmentshader; //--- ì„¸ì´ë” ê°ì²´
 GLvoid Reshape(int w, int h);
 GLuint VAO, VBO_position, VBO_color;
 GLuint VBO_rec_position;
 static bool DrawLine = false;
 static bool StartMoveCross = false;
+static bool StartMoveZigzag = false;
 GLfloat mx;
 GLfloat my;
 random_device rd;
 default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
-uniform_real_distribution<float> dis(-0.005, 0.005);
+uniform_real_distribution<float> dis(-0.01, 0.01);
 uniform_real_distribution<float> cd(0.0, 1.0);
 static int tri_index;
+static int status[4]{ 0 };
 
-GLfloat vertexData[] = { //--- »ï°¢Çü À§Ä¡ °ª
-	-0.5, 0.8, 0.0, // ¸Ç À§
-	-0.6, 0.4, 0.0, // ¿ŞÂÊ
-	-0.4, 0.4, 0.0, // ¿À¸¥ÂÊ
-
-	0.5,  0.8, 0.0,
-	0.4,  0.4, 0.0,
-	0.6,  0.4, 0.0,
-
-	-0.5, -0.4, 0.0,
-	-0.6, -0.8, 0.0,
-	-0.4, -0.8, 0.0,
-
-	0.5, -0.4, 0.0,
-	0.4, -0.8, 0.0,
-	0.6, -0.8, 0.0,
-
-   -0.6, 0.3, 0.0,
-    0.6, 0.3, 0.0,
-    0.6, -0.3, 0.0,
-   -0.6, -0.3, 0.0
+enum FirstVertexDir {
+	up = 0,
+	down = 1,
+	left = 2,
+	right = 3,
 };
 
-GLfloat colorData[] = { //--- »ï°¢Çü À§Ä¡ °ª
+GLfloat vertexData[] = { //--- ì‚¼ê°í˜• ìœ„ì¹˜ ê°’
+	-0.5, 0.7, 0.0, // ë§¨ ìœ„
+	-0.55, 0.5, 0.0, // ì™¼ìª½
+	-0.45, 0.5, 0.0, // ì˜¤ë¥¸ìª½
+
+	 0.0,  0.1, 0.0,
+	-0.05,  0.3, 0.0,
+	 0.05,  0.3, 0.0,
+
+	 0.0, -0.1, 0.0,
+	-0.05, -0.3, 0.0,
+	 0.05, -0.3, 0.0,
+
+   -0.5, 0.3, 0.0,
+    0.5, 0.3, 0.0,
+    0.5, -0.3, 0.0,
+   -0.5, -0.3, 0.0
+};
+
+GLfloat colorData[] = { //--- ì‚¼ê°í˜• ìœ„ì¹˜ ê°’
 	1.0, 0.0, 0.0,
 	1.0, 0.0, 0.0,
 	1.0, 0.0, 0.0,
@@ -60,10 +65,6 @@ GLfloat colorData[] = { //--- »ï°¢Çü À§Ä¡ °ª
 	0.0, 0.0, 1.0,
 	0.0, 0.0, 1.0,
 	0.0, 0.0, 1.0,
-
-	0.4, 0.0, 0.3,
-	0.4, 0.0, 0.3,
-	0.4, 0.0, 0.3,
 
 	1.0, 1.0, 1.0,
 	1.0, 1.0, 1.0,
@@ -111,33 +112,33 @@ void RotateVertex(int digree, int index)
 	float center_x = vertexData[index * 9];
 	float center_y = vertexData[index * 9 + 4];
 
-	vertexData[index * 9 + 0] = center_x + 0.4 * sin(digree / 360.0 * 2 * 3.141592);
-	vertexData[index * 9 + 1] = center_y + 0.4 * cos(digree / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 0] = center_x + 0.2 * sin(digree / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 1] = center_y + 0.2 * cos(digree / 360.0 * 2 * 3.141592);
 
-	vertexData[index * 9 + 3] = center_x + 0.1 * sin((digree - 90) / 360.0 * 2 * 3.141592);
-	vertexData[index * 9 + 4] = center_y + 0.1 * cos((digree - 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 3] = center_x + 0.05 * sin((digree - 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 4] = center_y + 0.05 * cos((digree - 90) / 360.0 * 2 * 3.141592);
 
-	vertexData[index * 9 + 6] = center_x + 0.1 * sin((digree + 90) / 360.0 * 2 * 3.141592);
-	vertexData[index * 9 + 7] = center_y + 0.1 * cos((digree + 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 6] = center_x + 0.05 * sin((digree + 90) / 360.0 * 2 * 3.141592);
+	vertexData[index * 9 + 7] = center_y + 0.05 * cos((digree + 90) / 360.0 * 2 * 3.141592);
 }
 
 void make_vertexShader()
 {
 	vertexsource = filetobuf("vertex.glsl");
-	//--- ¹öÅØ½º ¼¼ÀÌ´õ °´Ã¼ ¸¸µé±â
+	//--- ë²„í…ìŠ¤ ì„¸ì´ë” ê°ì²´ ë§Œë“¤ê¸°
 	vertexshader = glCreateShader(GL_VERTEX_SHADER);
-	//--- ¼¼ÀÌ´õ ÄÚµå¸¦ ¼¼ÀÌ´õ °´Ã¼¿¡ ³Ö±â
+	//--- ì„¸ì´ë” ì½”ë“œë¥¼ ì„¸ì´ë” ê°ì²´ì— ë„£ê¸°
 	glShaderSource(vertexshader, 1, (const GLchar**)&vertexsource, 0);
-	//--- ¹öÅØ½º ¼¼ÀÌ´õ ÄÄÆÄÀÏÇÏ±â
+	//--- ë²„í…ìŠ¤ ì„¸ì´ë” ì»´íŒŒì¼í•˜ê¸°
 	glCompileShader(vertexshader);
-	//--- ÄÄÆÄÀÏÀÌ Á¦´ë·Î µÇÁö ¾ÊÀº °æ¿ì: ¿¡·¯ Ã¼Å©
+	//--- ì»´íŒŒì¼ì´ ì œëŒ€ë¡œ ë˜ì§€ ì•Šì€ ê²½ìš°: ì—ëŸ¬ ì²´í¬
 	GLint result;
 	GLchar errorLog[512];
 	glGetShaderiv(vertexshader, GL_COMPILE_STATUS, &result);
 	if (!result)
 	{
 		glGetShaderInfoLog(vertexshader, 512, NULL, errorLog);
-		cerr << "ERROR: vertex shader ÄÄÆÄÀÏ ½ÇÆĞ\n" << errorLog << endl;
+		cerr << "ERROR: vertex shader ì»´íŒŒì¼ ì‹¤íŒ¨\n" << errorLog << endl;
 		return;
 	}
 }
@@ -145,20 +146,20 @@ void make_vertexShader()
 void make_fragmentShader()
 {
 	fragmentsource = filetobuf("fragment.glsl");
-	//--- ÇÁ·¡±×¸ÕÆ® ¼¼ÀÌ´õ °´Ã¼ ¸¸µé±â
+	//--- í”„ë˜ê·¸ë¨¼íŠ¸ ì„¸ì´ë” ê°ì²´ ë§Œë“¤ê¸°
 	fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
-	//--- ¼¼ÀÌ´õ ÄÚµå¸¦ ¼¼ÀÌ´õ °´Ã¼¿¡ ³Ö±â
+	//--- ì„¸ì´ë” ì½”ë“œë¥¼ ì„¸ì´ë” ê°ì²´ì— ë„£ê¸°
 	glShaderSource(fragmentshader, 1, (const GLchar**)&fragmentsource, 0);
-	//--- ÇÁ·¡±×¸ÕÆ® ¼¼ÀÌ´õ ÄÄÆÄÀÏ
+	//--- í”„ë˜ê·¸ë¨¼íŠ¸ ì„¸ì´ë” ì»´íŒŒì¼
 	glCompileShader(fragmentshader);
-	//--- ÄÄÆÄÀÏÀÌ Á¦´ë·Î µÇÁö ¾ÊÀº °æ¿ì: ÄÄÆÄÀÏ ¿¡·¯ Ã¼Å©
+	//--- ì»´íŒŒì¼ì´ ì œëŒ€ë¡œ ë˜ì§€ ì•Šì€ ê²½ìš°: ì»´íŒŒì¼ ì—ëŸ¬ ì²´í¬
 	GLint result;
 	GLchar errorLog[512];
 	glGetShaderiv(fragmentshader, GL_COMPILE_STATUS, &result);
 	if (!result)
 	{
 		glGetShaderInfoLog(fragmentshader, 512, NULL, errorLog);
-		cerr << "ERROR: fragment shader ÄÄÆÄÀÏ ½ÇÆĞ\n" << errorLog << endl;
+		cerr << "ERROR: fragment shader ì»´íŒŒì¼ ì‹¤íŒ¨\n" << errorLog << endl;
 		return;
 	}
 }
@@ -186,86 +187,157 @@ void InitBuffer()
 
 void InitShader()
 {
-	make_vertexShader(); //--- ¹öÅØ½º ¼¼ÀÌ´õ ¸¸µé±â
-	make_fragmentShader(); //--- ÇÁ·¡±×¸ÕÆ® ¼¼ÀÌ´õ ¸¸µé±â
+	make_vertexShader(); //--- ë²„í…ìŠ¤ ì„¸ì´ë” ë§Œë“¤ê¸°
+	make_fragmentShader(); //--- í”„ë˜ê·¸ë¨¼íŠ¸ ì„¸ì´ë” ë§Œë“¤ê¸°
 	//-- shader Program
 	s_program = glCreateProgram();
 	glAttachShader(s_program, vertexshader);
 	glAttachShader(s_program, fragmentshader);
 	glLinkProgram(s_program);
-	//--- ¼¼ÀÌ´õ »èÁ¦ÇÏ±â
+	//--- ì„¸ì´ë” ì‚­ì œí•˜ê¸°
 	glDeleteShader(vertexshader);
 	glDeleteShader(fragmentshader);
-	//--- Shader Program »ç¿ëÇÏ±â
+	//--- Shader Program ì‚¬ìš©í•˜ê¸°
 	glUseProgram(s_program);
 }
 
 GLvoid drawScene()
 {
-	//--- º¯°æµÈ ¹è°æ»ö ¼³Á¤
+	//--- ë³€ê²½ëœ ë°°ê²½ìƒ‰ ì„¤ì •
 	glClearColor(0.2, 0.3, 0.3, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//--- ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¼¼ÀÌ´õ ºÒ·¯¿À±â
+	//--- ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— ì„¸ì´ë” ë¶ˆëŸ¬ì˜¤ê¸°
 	glUseProgram(s_program);
 
-	//--- »ç¿ëÇÒ VAO ºÒ·¯¿À±â
+	//--- ì‚¬ìš©í•  VAO ë¶ˆëŸ¬ì˜¤ê¸°
 	glBindVertexArray(VAO);
 
-	//--- »ï°¢Çü ±×¸®±â
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	//--- ì‚¼ê°í˜• ê·¸ë¦¬ê¸°
+	glDrawArrays(GL_TRIANGLES, 0, 9);
 
 	glPointSize(10);
-	glDrawArrays(GL_LINE_LOOP, 12, 4);
+	glDrawArrays(GL_LINE_LOOP, 9, 4);
 
-	//--- È­¸é¿¡ Ãâ·ÂÇÏ±â
+	//--- í™”ë©´ì— ì¶œë ¥í•˜ê¸°
 	glutSwapBuffers();
 }
 
-GLvoid Reshape(int w, int h) //--- Äİ¹é ÇÔ¼ö: ´Ù½Ã ±×¸®±â Äİ¹é ÇÔ¼ö
+GLvoid Reshape(int w, int h) //--- ì½œë°± í•¨ìˆ˜: ë‹¤ì‹œ ê·¸ë¦¬ê¸° ì½œë°± í•¨ìˆ˜
 {
 	glViewport(0, 0, w, h);
 }
 
 static GLfloat randMove[8];
 
+void ReColor(int index)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		float randColor = cd(dre);
+		for (int j = 0; j < 3; ++j)
+			colorData[index * 9 + j * 3 + i] = randColor;
+	}
+}
+
 void TimerFunction(int value)
 {
 	if (StartMoveCross)
 	{
-		for (int i = 0; i < 4; ++i)
+		for (int i = 0; i < 1; ++i)
 		{
 			MoveVertex(i, randMove[i], randMove[i + 4]);
 
 			for (int j = 0; j < 3; j++)
 			{
-				if (vertexData[i * 9 + j * 3] <= -1.0)
+				if (-0.5 < vertexData[i * 9 + j * 3] && vertexData[i * 9 + j * 3] < 0.5 &&
+					-0.3 < vertexData[i * 9 + j * 3 + 1] && vertexData[i * 9 + j * 3 + 1] < 0.3)
+				{
+					ReColor(i);
+					if (status[i] == FirstVertexDir::up)
+					{
+						randMove[i + 4] *= -1;
+						status[i] == FirstVertexDir::down;
+						RotateVertex(180, i);
+					}
+					else if (status[i] == FirstVertexDir::down)
+					{
+						randMove[i + 4] *= -1;
+						status[i] == FirstVertexDir::up;
+						RotateVertex(0, i);
+					}
+					else if (status[i] == FirstVertexDir::right)
+					{
+						randMove[i] *= -1;
+						status[i] == FirstVertexDir::left;
+						RotateVertex(270, i);
+					}
+					else if (status[i] == FirstVertexDir::left)
+					{
+						randMove[i] *= -1;
+						status[i] == FirstVertexDir::right;
+						RotateVertex(90, i);
+					}
+					break;
+				}
+				else if (vertexData[i * 9 + j * 3] <= -1.0)
 				{
 					randMove[i] *= -1;
+					status[i] = FirstVertexDir::right;
 					RotateVertex(90, i);
+					ReColor(i);
 					break;
 				}
 				else if (vertexData[i * 9 + j * 3] >= 1.0)
 				{
 					randMove[i] *= -1;
+					status[i] = FirstVertexDir::left;
 					RotateVertex(270, i);
+					ReColor(i);
 					break;
 				}
 				else if (vertexData[i * 9 + j * 3 + 1] <= -1.0)
 				{
 					randMove[i + 4] *= -1;
+					status[i] = FirstVertexDir::up;
 					RotateVertex(0, i);
+					ReColor(i);
 					break;
 				}
 				else if (vertexData[i * 9 + j * 3 + 1] >= 1.0)
 				{
 					randMove[i + 4] *= -1;
+					status[i] = FirstVertexDir::down;
 					RotateVertex(180, i);
+					ReColor(i);
 					break;
 				}
 			}
 		}
 	}
+
+	if (StartMoveZigzag)
+	{
+		static float moveZigzag = 0.01;
+
+		for (int i = 1; i <= 1; ++i)
+		{
+			for (int j = 0; j < 1; ++j)
+			{
+				if (-0.5 > vertexData[i * 9 + (j +1) * 3] || vertexData[i * 9 + (j + 2) * 3] > 0.5)
+				{
+					moveZigzag *= -1;
+					ReColor(i);
+					ReColor(i + 1);
+					break;
+				}
+			}
+		}
+
+		MoveVertex(1, moveZigzag, 0);
+		MoveVertex(2, -moveZigzag, 0);
+	}
+
 	InitBuffer();
 
 	glutPostRedisplay();
@@ -283,9 +355,12 @@ void Keyboard(unsigned char key, int x, int y)
 		else 
 			StartMoveCross = true;
 		break;
-	case 'b':
-	case 'B':
-		DrawLine = true;
+	case 'i':
+	case 'I':
+		if (StartMoveZigzag)
+			StartMoveZigzag = false;
+		else
+			StartMoveZigzag = true;
 		break;
 	}
 
@@ -299,11 +374,11 @@ void Mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		vertexData[tri_index * 9 + 0 * 3] = mx;
-		vertexData[tri_index * 9 + 0 * 3 + 1] = my + 0.2;
-		vertexData[tri_index * 9 + 1 * 3] = mx - 0.1;
-		vertexData[tri_index * 9 + 1 * 3 + 1] = my - 0.2;
-		vertexData[tri_index * 9 + 2 * 3] = mx + 0.1;
-		vertexData[tri_index * 9 + 2 * 3 + 1] = my - 0.2;
+		vertexData[tri_index * 9 + 0 * 3 + 1] = my + 0.1;
+		vertexData[tri_index * 9 + 1 * 3] = mx - 0.05;
+		vertexData[tri_index * 9 + 1 * 3 + 1] = my - 0.1;
+		vertexData[tri_index * 9 + 2 * 3] = mx + 0.05;
+		vertexData[tri_index * 9 + 2 * 3 + 1] = my - 0.1;
 
 		for (int i{ 0 }; i < 3; ++i)
 		{
@@ -318,22 +393,41 @@ void Mouse(int button, int state, int x, int y)
 	}
 }
 
-void main(int argc, char** argv) //--- À©µµ¿ì Ãâ·ÂÇÏ°í Äİ¹éÇÔ¼ö ¼³Á¤
+void main(int argc, char** argv) //--- ìœˆë„ìš° ì¶œë ¥í•˜ê³  ì½œë°±í•¨ìˆ˜ ì„¤ì •
 {
-	//--- À©µµ¿ì »ı¼ºÇÏ±â
+	//--- ìœˆë„ìš° ìƒì„±í•˜ê¸°
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(800, 800);
 	glutCreateWindow("Example1");
-	//--- GLEW ÃÊ±âÈ­ÇÏ±â
+	//--- GLEW ì´ˆê¸°í™”í•˜ê¸°
 	glewExperimental = GL_TRUE;
 	glewInit();
 	InitShader();
 	InitBuffer();
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 8; ++i)
 		randMove[i] = dis(dre);
+	for (int i = 0; i < 4; ++i)
+	{
+		if (randMove[i] > 0 && randMove[i + 4] < 0)
+		{
+			status[i] = FirstVertexDir::down;
+		}
+		if (randMove[i] > 0 && randMove[i + 4] > 0)
+		{
+			status[i] = FirstVertexDir::up;
+		}
+		if (randMove[i] < 0 && randMove[i + 4] < 0)
+		{
+			status[i] = FirstVertexDir::left;
+		}
+		if (randMove[i] < 0 && randMove[i + 4] > 0)
+		{
+			status[i] = FirstVertexDir::right;
+		}
+	}
 
 	glutDisplayFunc(drawScene);
 	glutMouseFunc(Mouse);
