@@ -1,0 +1,8 @@
+﻿  소스.cpp
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(50,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(201,29): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(202,29): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(203,29): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(208,28): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(227,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+  cg_1-10.vcxproj -> C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\Debug\cg_1-10.exe
