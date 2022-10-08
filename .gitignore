@@ -1,5 +1,6 @@
 cg_1/cg_1-10/.vs/
 cg_1/cg_1-10/cg_1-10/Debug/
 cg_1/cg_1-10/Debug/
-*.suo
+
 *.db
+*.suo
