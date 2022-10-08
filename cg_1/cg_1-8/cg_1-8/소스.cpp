@@ -371,26 +371,6 @@ void Mouse(int button, int state, int x, int y)
 {
 	convertDeviceXYOpenGlXY(x, y, &mx, &my);
 
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		vertexData[tri_index * 9 + 0 * 3] = mx;
-		vertexData[tri_index * 9 + 0 * 3 + 1] = my + 0.1;
-		vertexData[tri_index * 9 + 1 * 3] = mx - 0.05;
-		vertexData[tri_index * 9 + 1 * 3 + 1] = my - 0.1;
-		vertexData[tri_index * 9 + 2 * 3] = mx + 0.05;
-		vertexData[tri_index * 9 + 2 * 3 + 1] = my - 0.1;
-
-		for (int i{ 0 }; i < 3; ++i)
-		{
-			float randColor = cd(dre);
-
-			for (int j{ 0 }; j < 3; ++j)
-				colorData[tri_index * 9 + j * 3 + i] = randColor;
-		}
-
-		InitBuffer();
-		tri_index = (tri_index + 1) % 4;
-	}
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
