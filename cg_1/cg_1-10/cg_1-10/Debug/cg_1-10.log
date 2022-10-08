@@ -1,8 +1,49 @@
 ﻿  소스.cpp
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(50,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(201,29): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(202,29): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(203,29): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(208,28): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(227,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
-  cg_1-10.vcxproj -> C:\GitHub\Computer_Graphics\Computer_Graphics\cg_1\cg_1-10\Debug\cg_1-10.exe
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(64,1): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(253,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(254,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(255,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(263,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(264,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(265,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(273,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(274,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(275,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(280,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(281,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(282,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(283,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(284,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(285,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(286,26): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(301,27): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(303,27): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(306,26): warning C4305: '+=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(308,26): warning C4305: '-=': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(355,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(356,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(357,27): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(364,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(365,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(366,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(370,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(371,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(372,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(380,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(381,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(382,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(386,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(387,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(388,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(392,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(393,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(394,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(399,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(400,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(401,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(402,29): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(403,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(404,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(405,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(413,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
+  cg_1-10.vcxproj -> C:\Github\Computer_Graphics\cg_1\cg_1-10\Debug\cg_1-10.exe

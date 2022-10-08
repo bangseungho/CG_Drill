@@ -9,9 +9,12 @@
 #include <random>
 using namespace std;
 
+#define ROW 3
+#define COL 1
+
 GLchar* vertexsource, * fragmentsource; //--- 소스코드 저장 변수
 GLuint vertexshader, fragmentshader; //--- 세이더 객체
-GLuint VAO, VBO, VBO_color;
+GLuint VAO, VBO[3];
 GLvoid Reshape(int w, int h);
 const double pi = 3.14159265358979;
 GLfloat mx;
@@ -22,6 +25,7 @@ default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
 GLuint s_program;
 static int shape = 0;
+static bool draw_point = false;
 
 const GLfloat colors[] = {
 	 0.0, 0.5, 1.0,
@@ -32,22 +36,55 @@ const GLfloat colors[] = {
 	 1.0, 0.0, 0.0,
 	 1.0, 0.0, 0.0,
 	 1.0, 0.0, 0.0,
-	 1.0, 0.0, 0.0,
-	 1.0, 0.0, 0.0,
+
+	 0.0, 1.0, 0.0,
+
 };
 
-GLfloat points[] = { 	//--- 뒷 배경 선
+GLfloat points[4][42] = { 	//--- 뒷 배경 선
 	-1.0, 0.0, 0.0,
 	 1.0, 0.0, 0.0,
 
 	 0.0, -1.0, 0.0,
 	 0.0,  1.0, 0.0,
 
-	 -0.2, -0.2, 0.0,
-	 0.2, 0.2, 0.0,
-	 -0.2, -0.2, 0.0, // 삼각형 바뀌는 부분
-	 0.0, 0.2, 0.0, // 사각형 바뀌는 부분
+	 -0.2, -0.2, 0.0, // left bottom vertex
+	  0.2,  0.2, 0.0, // left top vertex
+	 -0.2, -0.2, 0.0, // right bottom vertex
+
+	  0.0,  0.2, 0.0, // left top vertex
+	  0.2, -0.2, 0.0, // right bottom vertex
+	  0.0,  0.2, 0.0, // right top vertex
+
+	  0.0, 0.1, 0.0,
+	 -0.2, 0.1, 0.0,
+	  0.2, 0.1, 0.0, 
+
+	  0.0, 0.0, 0.0,
 };
+
+GLfloat movePos[] = { 
+	0.0, 0.0, 
+	0.0, 0.0, 
+	0.0, 0.0, 
+	0.0, 0.0, 
+
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+	-0.5, 0.5,  
+
+	-0.5, 0.5,   
+};
+
+GLfloat copy_points[]{ 0 };
 
 char* filetobuf(const char* file)
 {
@@ -114,20 +151,22 @@ void InitBuffer()
 	glGenVertexArrays(1, &VAO); //--- VAO 를 지정하고 할당하기
 	glBindVertexArray(VAO); //--- VAO를 바인드하기
 
-	glGenBuffers(1, &VBO_color); //--- 1개의 VBO를 지정하고 할당하기
-	glGenBuffers(1, &VBO); //--- 1개의 VBO를 지정하고 할당하기
+	glGenBuffers(3, VBO); //--- 1개의 VBO를 지정하고 할당하기
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(movePos), movePos, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
 }
 
 void InitShader()
@@ -158,20 +197,31 @@ GLvoid drawScene()
 	//--- 삼각형 그리기
 	glPointSize(5);
 
+	int movePos = glGetUniformLocation(s_program, "in_movePos");
+	int Color = glGetUniformLocation(s_program, "new_Color");
+	glUniform2f(movePos, 0, 0);
+	glUniform3f(Color, 0.0, 0.5, 1.0);
 	glDrawArrays(GL_LINES, 0, 4);
 
-	switch (shape)
-	{
-	case 0:
-		glDrawArrays(GL_LINES, 4, 2);
-		break;
-	case 1:
-		glDrawArrays(GL_TRIANGLE_FAN, 4, 3);
-		break;
-	case 2:
-		glDrawArrays(GL_TRIANGLE_FAN, 4, 6);
-		break;
-	}
+	glUniform2f(movePos, -0.5, 0.5);
+	glUniform3f(Color, 1.0, 0.0, 0.0);
+	glDrawArrays(GL_LINES, 4, 2);
+	glDrawArrays(GL_TRIANGLE_FAN, 4, 3);
+
+	glUniform2f(movePos, 0.5, 0.5);
+	glUniform3f(Color, 0.0, 1.0, 0.0);
+	glDrawArrays(GL_TRIANGLES, 1 * 14 + 4, 6);
+
+	glUniform2f(movePos, -0.5, -0.5);
+	glUniform3f(Color, 0.0, 0.0, 1.0);
+	glDrawArrays(GL_TRIANGLES, 2 * 14 + 4, 9);
+
+	glUniform2f(movePos, 0.5, -0.5);
+	glUniform3f(Color, 1.0, 0.0, 1.0);
+	if (draw_point)
+		glDrawArrays(GL_POINTS, 3 * 14 + 13, 1);
+	glDrawArrays(GL_TRIANGLES, 3 * 14 + 4, 9);
+
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -187,29 +237,96 @@ void Mouse(int button, int state, int x, int y)
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		shape++;
+		shape = true;
 	}
 }
 
+void move_point(float value, int row, int column, int index)
+{
+	points[index][row * ROW + column * COL] += value;
+}
+
+void line_to_triangle()
+{
+	if (points[0][6 * ROW + 0 * COL] - 0.2 <= points[0][4 * 3 + 3])
+	{
+		move_point(-0.01, 5, 0, 0);
+		move_point(0.01, 6, 0, 0);
+		move_point(0.01, 6, 0, 0);
+	}
+}
+
+void triangle_to_rectangle()
+{
+	if (points[1][4 * ROW + 0 * COL] <= points[1][5 * ROW + 0 * COL])
+	{
+		move_point(-0.01, 5, 0, 1);
+		move_point(-0.01, 7, 0, 1);
+		move_point(0.01, 9, 0, 1);
+	}
+}
+
+void rectangle_to_pentagon()
+{
+	if (points[2][5 * ROW + 1 * COL] >= 0.1)
+	{
+		move_point(-0.01, 5, 1, 2);
+		move_point(-0.01, 7, 1, 2);
+		move_point(-0.01, 9, 1, 2);
+
+	}
+	else if (points[2][10 * ROW + 1 * COL] <= 0.2)
+	{
+		move_point(0.01, 10, 1, 2);
+		move_point(0.01, 4, 0, 2);
+		move_point(-0.01, 6, 0, 2);
+		move_point(-0.01, 8, 0, 2);
+		move_point(0.01, 4, 1, 2);
+		move_point(0.01, 6, 1, 2);
+		move_point(0.01, 8, 1,2);
+	}
+}
+
+void pentagon_to_point()
+{
+	if (points[3][7 * ROW + 0 * COL] <= -0.01)
+	{
+		for (int i{ 12 }; i < 39; ++i)
+		{
+			if (points[3][i] != 0)
+			{
+				if (i == 31 || i == 15 || i == 21 || i == 27 || i == 33 || i == 36)
+				{
+					if (points[3][i] < 0.01)
+						points[3][i] += 0.02;
+					else if (points[3][i] > 0.01)
+						points[3][i] -= 0.02;
+				}
+				else if (points[3][i] < 0.01)
+					points[3][i] += 0.01;
+				else if (points[3][i] > 0.01)
+					points[3][i] -= 0.01;
+			}
+		}
+	}
+	else
+	{
+		draw_point = true;
+	}
+}
+
+
 void TimerFunction(int value)
 {
-	switch (shape)
+	if (shape)
 	{
-	case 1:
-		if (points[4 * 3 + 6] - 0.2 <= points[4 * 3 + 3])
-		{
-			points[4 * 3 + 3] -= 0.01;
-			points[4 * 3 + 6] += 0.01;
-			points[4 * 3 + 6] += 0.01;
-		}
-		break;
-	case 2:
-	{
-		points[4 * 3 + 3] -= 0.01; 
-	}
+		line_to_triangle();
+		triangle_to_rectangle();
+		rectangle_to_pentagon();
+		pentagon_to_point();
 	}
 
-	
+
 	InitBuffer();
 	glutPostRedisplay();
 	glutTimerFunc(100, TimerFunction, 1);
@@ -223,6 +340,75 @@ void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 	*oy = -(float)(y - (float)h / 2.0) * (float)(1.0 / (float)(h / 2.0));
 }
 
+void Init()
+{
+	for (int i = 1; i < 4; ++i)
+	{
+		for (int j = 0; j < 42; ++j)
+		{
+			points[i][j] = points[0][j];
+		}
+	}
+
+	while (points[1][6 * ROW + 0 * COL] - 0.2 <= points[1][4 * 3 + 3])
+	{
+		move_point(-0.01, 5, 0, 1);
+		move_point(0.01, 6, 0, 1);
+		move_point(0.01, 6, 0, 1);
+	}
+
+	while (points[2][4 * ROW + 0 * COL] <= points[2][5 * ROW + 0 * COL])
+	{
+		if (points[2][6 * ROW + 0 * COL] - 0.2 <= points[2][4 * 3 + 3])
+		{
+			move_point(-0.01, 5, 0, 2);
+			move_point(0.01, 6, 0, 2);
+			move_point(0.01, 6, 0, 2);
+		}
+		else if (points[2][4 * ROW + 0 * COL] <= points[2][5 * ROW + 0 * COL])
+		{
+			move_point(-0.01, 5, 0, 2);
+			move_point(-0.01, 7, 0, 2);
+			move_point(0.01, 9, 0, 2);
+		}
+	}
+
+	while (points[3][10 * ROW + 1 * COL] <= 0.2)
+	{
+		if (points[3][6 * ROW + 0 * COL] - 0.2 <= points[3][4 * 3 + 3])
+		{
+			move_point(-0.01, 5, 0, 3);
+			move_point(0.01, 6, 0, 3);
+			move_point(0.01, 6, 0, 3);
+		}
+		else if (points[3][4 * ROW + 0 * COL] <= points[3][5 * ROW + 0 * COL])
+		{
+			move_point(-0.01, 5, 0, 3);
+			move_point(-0.01, 7, 0, 3);
+			move_point(0.01, 9, 0, 3);
+		}
+		else if (points[3][5 * ROW + 1 * COL] >= 0.1)
+		{
+			move_point(-0.01, 5, 1, 3);
+			move_point(-0.01, 7, 1, 3);
+			move_point(-0.01, 9, 1, 3);
+
+		}
+		else if (points[3][10 * ROW + 1 * COL] <= 0.2)
+		{
+			move_point(0.01, 10, 1, 3);
+			move_point(0.01, 4, 0, 3);
+			move_point(-0.01, 6, 0, 3);
+			move_point(-0.01, 8, 0, 3);
+			move_point(0.01, 4, 1, 3);
+			move_point(0.01, 6, 1, 3);
+			move_point(0.01, 8, 1, 3);
+		}
+	}
+
+
+}
+
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
 	//--- 윈도우 생성하기
@@ -233,6 +419,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutCreateWindow("Example1");
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
+	Init();
 	glewInit();
 	InitShader();
 	InitBuffer();
