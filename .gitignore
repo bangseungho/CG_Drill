@@ -15,4 +15,5 @@ cg_1/cg_1-10/cg_1-10/Debug/vc143.pdb
 cg_1/cg_1-10/cg_1-10/Debug/소스.obj
 cg_1/cg_1-10/Debug/cg_1-10.exe
 cg_1/cg_1-10/Debug/cg_1-10.pdb
-cg_1/cg_1-10/.vs/cg_1-10/v17/.suo
+cg_1/*.suo/
+cg_1/*.db/
