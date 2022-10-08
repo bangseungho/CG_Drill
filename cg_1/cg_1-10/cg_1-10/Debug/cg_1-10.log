@@ -46,5 +46,4 @@ C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(403,28): warning C43
 C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(404,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
 C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(405,28): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
 C:\Github\Computer_Graphics\cg_1\cg_1-10\cg_1-10\소스.cpp(413,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
-  LINK : C:\Github\Computer_Graphics\cg_1\cg_1-10\Debug\cg_1-10.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
   cg_1-10.vcxproj -> C:\Github\Computer_Graphics\cg_1\cg_1-10\Debug\cg_1-10.exe
