@@ -389,3 +389,7 @@ pip-log.txt
 
 #Custom
 OpenGL-GLFW/debug.txt
+
+# VS Generated Files
+*.suo
+*.db
