@@ -21,6 +21,7 @@ const double pi = 3.14159265358979;
 GLfloat mx;
 GLfloat my;
 void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
+void special(int key, int x, int y);
 random_device rd;
 default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
@@ -29,6 +30,14 @@ GLuint s_program;
 bool draw_on[10]{ false };
 GLfloat color[10][3];
 
+static bool c_draw = false;
+static bool p_draw = true;
+static bool w_draw = false;
+static bool depth_draw = false;
+static int rotate_cw_x = 2;
+static int rotate_cw_y = 2;
+static int key_down = 0;
+static int reset = false;
 int cross_shape[3][2];
 
 char* filetobuf(const char* file)
@@ -110,25 +119,28 @@ void InitShader()
 void InitBuffer()
 {
 	GLfloat vertices[] = {
-		-1.0, 0.0, 0.0,
-		1.0, 0.0, 0.0,
-		0.0, 1.0, 0.0,
-		0.0, -1.0, 0.0,
+		-1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
+		1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
+		0.0, 1.0, 0.0,		0.0, 1.0, 0.0,
+		0.0, -1.0, 0.0,		0.0, 1.0, 0.0,
 
-		-0.5, -0.5, -0.5, 
-		 0.5, -0.5, -0.5, 
-		 -0.5, -0.5, 0.5, 
-		 0.5, -0.5, 0.5, 
+		-0.4, -0.4, -0.4,	1.0, 0.0, 0.0,
+		 0.4, -0.4, -0.4,	0.0, 1.0, 0.0,
+		 -0.4, -0.4, 0.4,	0.0, 0.0, 1.0,
+		 0.4, -0.4, 0.4,	1.0, 0.0, 1.0,
 
-		 -0.5, 0.5, -0.5, 
-		 0.5, 0.5, -0.5, 
-		 -0.5, 0.5, 0.5, 
-		 0.5, 0.5, 0.5,
+		 -0.4, 0.4, -0.4,	1.0, 1.0, 0.0,
+		 0.4, 0.4, -0.4,	 0.0, 1.0, 1.0,
+		 -0.4, 0.4, 0.4,	0.5, 0.0, 1.0,
+		 0.4, 0.4, 0.4,		 0.0, 0.5, 1.0,
 
-		 0.0, -0.3, -0.3, 
-		 0.4, -0.3, 0.3, 
-		 -0.4, -0.3, 0.3,
-		 0.0, 0.3, 0.0,
+
+		 0.0, 0.4, 0.0,		0.0, 0.5, 1.0,
+		-0.4, -0.4, -0.4,	1.0, 0.0, 0.0,
+		 0.4, -0.4, -0.4,	0.0, 1.0, 0.0,
+		 0.4, -0.4, 0.4,	1.0, 0.0, 1.0,
+		 -0.4, -0.4, 0.4,	0.0, 0.0, 1.0,
+
 
 	};
 
@@ -137,29 +149,31 @@ void InitBuffer()
 		2, 3, 
 
 		4, 5, 6, // 아랫면
-		5, 6, 7,
+		5, 7, 6,
 
-		8, 9, 10, // 윗면
-		9, 10, 11,
+		8, 11, 9, // 윗면
+		8, 10, 11,
 
-		5, 7, 9, // 우측면
-		7, 9, 11, 
+		9, 11, 5, // 우측면
+		5, 11, 7, 
 
-		4, 6, 8, // 왼쪽면
-		6, 8, 10, 
+		8, 4, 6, // 왼쪽면
+		8, 6, 10, 
 
 		6, 7, 10, // 뒷면
-		7, 10, 11, 
+		7, 11, 10, 
 
-		4, 5, 8, // 앞면
-		5, 8, 9,
+		9, 5, 4, // 앞면
+		8, 9, 4,
 
 		//================
 
-		12, 13, 14, 
-		15, 14, 13, 
-		15, 12, 14, 
-		15, 13, 12,
+		13, 15, 16,
+		13, 14, 15,
+		12, 13, 16, 
+		12, 14, 13, 
+		12, 15, 14, 
+		12, 16, 15,
 	};
 
 	glGenVertexArrays(1, &VAO); //--- VAO 를 지정하고 할당하기
@@ -172,63 +186,89 @@ void InitBuffer()
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), index, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
 }
+
+glm::mat4 R = glm::mat4(1.0f); //--- 회전 행렬 선언
+glm::mat4 T = glm::mat4(1.0f); //--- 이동 행렬 선언
+glm::mat4 TR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
 GLvoid drawScene()
 {
 	//--- 변경된 배경색 설정
 	glClearColor(0.0, 0.0, 0.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
+
+	if (!depth_draw)
+		glEnable(GL_DEPTH_TEST);
+	else
+		glDisable(GL_DEPTH_TEST);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(s_program);
 	//--- 사용할 VAO 불러오기
 	//--- 삼각형 그리기
 	glBindVertexArray(VAO);
 
-	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
-	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
-	glm::mat4 TR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
-	Tx = glm::translate(Tx, glm::vec3(0.0, 0.0, 0.0));
-	Rz = glm::rotate(Rz, glm::radians(10.0f), glm::vec3(1.0, 1.0, 0.0));
-
-	TR = Rz * Tx;
+	TR = R * T;
 
 	glm::mat4 unit = glm::mat4(1.0f);
+
+
 	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
 
 	int vColorLocation = glGetUniformLocation(s_program, "shape_color");
 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(unit)); // line
+
 	glUniform3f(vColorLocation, 1.0, 0.0, 0.0);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 	glUniform3f(vColorLocation, 0.0, 1.0, 0.0);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * 2));
 
+
 	glPointSize(5);
+
+
+	if (reset) {
+		rotate_cw_x = 2;
+		rotate_cw_y = 2;
+		R = glm::mat4(1.0f);
+		T = glm::mat4(1.0f);
+		TR = glm::mat4(1.0f);
+		T = glm::translate(T, glm::vec3(0.0, 0.0, 0.0));
+		R = glm::rotate(R, glm::radians(-30.0f), glm::vec3(1.0, 0.0, 0.0));
+		R = glm::rotate(R, glm::radians(-30.0f), glm::vec3(0.0, 1.0, 0.0));
+		reset = false;
+	}
 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR)); // triangle
 
 
-	for (int i = 0; i < 6; ++i)
-	{
-		if (draw_on[i]) {
-			glUniform3f(vColorLocation, color[i][0], color[i][1], color[i][2]);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * (4 + 6 * i)));
-		}
+
+
+	if (p_draw) {
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * (4)));
+	}
+	else if(c_draw) {
+		glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * (40)));
 	}
 
-	for (int i = 0; i < 4; ++i)
-	{
-		if (draw_on[i + 6]) {
-			glUniform3f(vColorLocation, color[i][0], color[i][1], color[i][2]);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * (40 + 3 * i)));
-		}
+	if (w_draw) {
+		glPolygonMode(GL_FRONT, GL_LINE);
+		glPolygonMode(GL_BACK, GL_LINE);
 	}
-
+	else if(!w_draw) {
+		glPolygonMode(GL_FRONT, GL_FILL);
+		glPolygonMode(GL_BACK, GL_FILL);
+	}
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -248,142 +288,118 @@ void Mouse(int button, int state, int x, int y)
 	}
 }
 
+void KeyUp(int z, int x, int y)
+{
+	key_down = 0;
+}
+
 void Keyboard(unsigned char key, int x, int y)
 {
 		switch (key)
 		{
-		case '1':
-			if (!draw_on[0])
-				draw_on[0] = true;
-			else draw_on[0] = false;
-			break;
-		case '2':
-			if (!draw_on[1])
-				draw_on[1] = true;
-			else draw_on[1] = false;
-			break;
-		case '3':
-			if (!draw_on[2])
-				draw_on[2] = true;
-			else draw_on[2] = false;
-			break;
-		case '4':
-			if (!draw_on[3])
-				draw_on[3] = true;
-			else draw_on[3] = false;
-			break;
-		case '5':
-			if (!draw_on[4])
-				draw_on[4] = true;
-			else draw_on[4] = false;
-			break;
-		case '6':
-			if (!draw_on[5])
-				draw_on[5] = true;
-			else draw_on[5] = false;
-			break;
-
-		case '7':
-			if (!draw_on[6])
-				draw_on[6] = true;
-			else draw_on[6] = false;
-			break;
-		case '8':
-			if (!draw_on[7])
-				draw_on[7] = true;
-			else draw_on[7] = false;
-			break;
-		case '9':
-			if (!draw_on[8])
-				draw_on[8] = true;
-			else draw_on[8] = false;
-			break;
-		case '0':
-			if (!draw_on[9])
-				draw_on[9] = true;
-			else draw_on[9] = false;
-			break;
-		case 'a':
-			if (!draw_on[0])
-			{
-				draw_on[0] = true;
-				draw_on[1] = true;
-			}
-			else 
-			{
-				draw_on[0] = false;
-				draw_on[1] = false;
-			}
-			break;
-		case 'b':
-			if (!draw_on[2])
-			{
-				draw_on[2] = true;
-				draw_on[3] = true;
-			}
-			else
-			{
-				draw_on[2] = false;
-				draw_on[3] = false;
-			}
-			break;
 		case 'c':
-			if (!draw_on[4])
-			{
-				draw_on[4] = true;
-				draw_on[5] = true;
-			}
-			else
-			{
-				draw_on[4] = false;
-				draw_on[5] = false;
+			if (!c_draw) {
+				p_draw = false;
+				c_draw = true;
 			}
 			break;
-		case 'e':
-			if (!draw_on[7])
-			{
-				draw_on[6] = true;
-				draw_on[7] = true;
-			}
-			else
-			{
-				draw_on[6] = false;
-				draw_on[7] = false;
+		case 'p':
+			if (!p_draw) {
+				p_draw = true;
+				c_draw = false;
 			}
 			break;
-		case 'f':
-			if (!draw_on[8])
-			{
-				draw_on[6] = true;
-				draw_on[8] = true;
-			}
+		case 'w':
+			if (!w_draw)
+				w_draw = true;
 			else
-			{
-				draw_on[6] = false;
-				draw_on[8] = false;
-			}
+				w_draw = false;
 			break;
-		case 'g':
-			if (!draw_on[9])
-			{
-				draw_on[6] = true;
-				draw_on[9] = true;
-			}
+		case 'h':
+			if (!depth_draw)
+				depth_draw = true;
 			else
-			{
-				draw_on[6] = false;
-				draw_on[9] = false;
-			}
+				depth_draw = false;
+			break;
+		case 'x':
+			rotate_cw_y = 2;
+			if (rotate_cw_x == 2 || rotate_cw_x == 1)
+				rotate_cw_x = 0;
+			else
+				rotate_cw_x = 1;
+			break;
+		case 'y':
+			rotate_cw_x = 2;
+			if (rotate_cw_y == 2 || rotate_cw_y == 1)
+				rotate_cw_y = 0;
+			else
+				rotate_cw_y = 1;
+			break;
+		case 's':
+			reset = true;
+			break;
+		case 'q':
+			exit(1);
 			break;
 		}
+
+
+}
+
+void special(int key, int x, int y)
+{
+	if (key == GLUT_KEY_LEFT)
+	{
+		key_down = 1;
+	}
+	if (key == GLUT_KEY_RIGHT)
+	{
+		key_down = 2;
+	}
+	if (key == GLUT_KEY_UP)
+	{
+		key_down = 3;
+	}
+	if (key == GLUT_KEY_DOWN)
+	{
+		key_down = 4;
+	}
 }
 
 void TimerFunction(int value)
 {
+	static float rotate_value = 0.5;
+
+	if(rotate_cw_x == 0)
+		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(1.0, 0.0, 0.0));
+	else if(rotate_cw_x == 1)
+		R = glm::rotate(R, glm::radians(-rotate_value), glm::vec3(1.0, 0.0, 0.0));
+	else if (rotate_cw_y == 0)
+		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(0.0, 1.0, 0.0));
+	else if (rotate_cw_y == 1)
+		R = glm::rotate(R, glm::radians(-rotate_value), glm::vec3(0.0, 1.0, 0.0));
+
+	if (key_down != 0)
+	{
+		switch (key_down) {
+		case 1:
+			T = glm::translate(T, glm::vec3(-0.005, 0.0, 0.0));
+			break;
+		case 2:
+			T = glm::translate(T, glm::vec3(0.005, 0.0, 0.0));
+			break;
+		case 3:
+			T = glm::translate(T, glm::vec3(0.0, 0.005, 0.0));
+			break;
+		case 4:
+			T = glm::translate(T, glm::vec3(0.0, -0.005, 0.0));
+			break;
+		}
+	}
 
 	InitBuffer();
 	glutPostRedisplay();
-	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(1, TimerFunction, 1);
 }
 
 void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
@@ -396,21 +412,18 @@ void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 
 void Init()
 {
-
+	T = glm::translate(T, glm::vec3(0.0, 0.0, 0.0));
+	R = glm::rotate(R, glm::radians(-30.0f), glm::vec3(1.0, 0.0, 0.0));
+	R = glm::rotate(R, glm::radians(-30.0f), glm::vec3(0.0, 1.0, 0.0));
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
-	for (int i = 0; i < 10; ++i)
-		for (int j = 0; j < 3; ++j)
-		{
-			color[i][j] = cd(dre);
-		}
 	//--- 윈도우 생성하기
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(800, 800);
 	glutCreateWindow("Example1");
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
@@ -422,6 +435,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutReshapeFunc(Reshape);
 	glutMouseFunc(Mouse);
 	glutKeyboardFunc(Keyboard);
+	glutSpecialFunc(special);
+	glutSpecialUpFunc(KeyUp);
 	glutTimerFunc(100, TimerFunction, 1);
 	glutMainLoop();
 }
