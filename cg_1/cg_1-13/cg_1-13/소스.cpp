@@ -7,9 +7,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <random>
-#include <gl/glm/glm/glm.hpp>
-#include <gl/glm/glm/ext.hpp>
-#include <gl/glm/glm/gtc/matrix_transform.hpp>
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
 
 using namespace std;
 
@@ -368,7 +368,7 @@ void special(int key, int x, int y)
 
 void TimerFunction(int value)
 {
-	static float rotate_value = 0.5;
+	static float rotate_value = 0.1;
 
 	if(rotate_cw_x == 0)
 		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(1.0, 0.0, 0.0));
