@@ -1,6 +1,0 @@
-﻿  소스.cpp
-C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(27,1): warning C4305: '초기화 중': 'double'에서 'const GLfloat'(으)로 잘립니다.
-C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(128,34): warning C4305: '인수': 'double'에서 'GLclampf'(으)로 잘립니다.
-C:\Users\BaekSeungHo\Desktop\cg_1-7\cg_1-7\소스.cpp(191,1): warning C4326: 'main'의 반환 형식이 'int'이어야 하는데 'void'입니다.
-C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(1094,5): error MSB6006: "link.exe"이(가) 종료되었습니다(코드: 1104).
-LINK : fatal error LNK1104: 'freeglut.lib' 파일을 열 수 없습니다.
