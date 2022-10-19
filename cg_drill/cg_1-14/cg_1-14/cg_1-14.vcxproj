@@ -132,8 +132,10 @@
     <ClCompile Include="소스.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="coord_vertex.glsl" />
     <None Include="fragment.glsl" />
-    <None Include="vertex.glsl" />
+    <None Include="lvertex.glsl" />
+    <None Include="rvertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

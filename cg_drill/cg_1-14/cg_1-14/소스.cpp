@@ -13,9 +13,14 @@
 
 using namespace std;
 
-GLchar* vertexsource, * fragmentsource; //--- 소스코드 저장 변수
-GLuint vertexshader, fragmentshader; //--- 세이더 객체
+GLchar* vertexsource, * lvertexsource, * fragmentsource; //--- 소스코드 저장 변수
+GLchar* coord_vertexsource;
+GLuint vertexshader, lvertexshader, fragmentshader; //--- 세이더 객체
+GLuint coord_vertexshader;
+GLUquadricObj * qobj;
+
 GLuint VAO, VBO, VBO_line, EBO;
+
 GLvoid Reshape(int w, int h);
 const double pi = 3.14159265358979;
 GLfloat mx;
@@ -27,6 +32,8 @@ default_random_engine dre(rd());
 uniform_real_distribution<float> d(-1.0, 1.0);
 uniform_real_distribution<float> cd(0, 1.0);
 GLuint s_program;
+GLuint l_s_program;
+GLuint coord_s_program;
 bool draw_on[10]{ false };
 GLfloat color[10][3];
 
@@ -60,13 +67,21 @@ char* filetobuf(const char* file)
 
 void make_vertexShader()
 {
-	vertexsource = filetobuf("vertex.glsl");
+	vertexsource = filetobuf("rvertex.glsl");
+	lvertexsource = filetobuf("lvertex.glsl");
+	coord_vertexsource = filetobuf("coord_vertex.glsl");
 	//--- 버텍스 세이더 객체 만들기
 	vertexshader = glCreateShader(GL_VERTEX_SHADER);
+	lvertexshader = glCreateShader(GL_VERTEX_SHADER);
+	coord_vertexshader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
 	glShaderSource(vertexshader, 1, (const GLchar**)&vertexsource, 0);
+	glShaderSource(lvertexshader, 1, (const GLchar**)&lvertexsource, 0);
+	glShaderSource(coord_vertexshader, 1, (const GLchar**)&coord_vertexsource, 0);
 	//--- 버텍스 세이더 컴파일하기
 	glCompileShader(vertexshader);
+	glCompileShader(lvertexshader);
+	glCompileShader(coord_vertexshader);
 	//--- 컴파일이 제대로 되지 않은 경우: 에러 체크
 	GLint result;
 	GLchar errorLog[512];
@@ -74,6 +89,20 @@ void make_vertexShader()
 	if (!result)
 	{
 		glGetShaderInfoLog(vertexshader, 512, NULL, errorLog);
+		cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << endl;
+		return;
+	}
+	glGetShaderiv(lvertexshader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(lvertexshader, 512, NULL, errorLog);
+		cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << endl;
+		return;
+	}
+	glGetShaderiv(coord_vertexshader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(coord_vertexshader, 512, NULL, errorLog);
 		cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << endl;
 		return;
 	}
@@ -106,14 +135,25 @@ void InitShader()
 	make_fragmentShader(); //--- 프래그먼트 세이더 만들기
 	//-- shader Program
 	s_program = glCreateProgram();
+	l_s_program = glCreateProgram();
+	coord_s_program = glCreateProgram();
+
 	glAttachShader(s_program, vertexshader);
+	glAttachShader(l_s_program, lvertexshader);
+	glAttachShader(coord_s_program, coord_vertexshader);
+
 	glAttachShader(s_program, fragmentshader);
+	glAttachShader(l_s_program, fragmentshader);
+	glAttachShader(coord_s_program, fragmentshader);
+
 	glLinkProgram(s_program);
+	glLinkProgram(l_s_program);
+	glLinkProgram(coord_s_program);
 	//--- 세이더 삭제하기
 	glDeleteShader(vertexshader);
+	glDeleteShader(lvertexshader);
+	glDeleteShader(coord_s_program);
 	glDeleteShader(fragmentshader);
-	//--- Shader Program 사용하기
-	glUseProgram(s_program);
 }
 
 void InitBuffer()
@@ -137,7 +177,7 @@ void InitBuffer()
 		 0.2, 0.2, 0.2,		 0.0, 0.5, 1.0,
 
 
-		// 0.0, 0.4, 0.0,		0.0, 0.5, 1.0,
+		// 0.0, 0.4, 0.0,	0.0, 0.5, 1.0,
 		//-0.4, -0.4, -0.4,	1.0, 0.0, 0.0,
 		// 0.4, -0.4, -0.4,	0.0, 1.0, 0.0,
 		// 0.4, -0.4, 0.4,	1.0, 0.0, 1.0,
@@ -204,6 +244,14 @@ glm::mat4 R = glm::mat4(1.0f); //--- 회전 행렬 선언
 glm::mat4 T = glm::mat4(1.0f); //--- 이동 행렬 선언
 glm::mat4 TR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
+glm::mat4 CR = glm::mat4(1.0f); //--- 회전 행렬 선언
+glm::mat4 CT = glm::mat4(1.0f); //--- 이동 행렬 선언
+glm::mat4 CTR = glm::mat4(1.0f); //--- 합성 변환 행렬
+
+glm::mat4 lR = glm::mat4(1.0f); //--- 회전 행렬 선언
+glm::mat4 lT = glm::mat4(1.0f); //--- 이동 행렬 선언
+glm::mat4 lTR = glm::mat4(1.0f); //--- 합성 변환 행렬
+
 GLvoid drawScene()
 {
 	//--- 변경된 배경색 설정
@@ -213,29 +261,38 @@ GLvoid drawScene()
 	if (!depth_draw)
 		glEnable(GL_DEPTH_TEST);
 	else
-		glDisable(GL_DEPTH_TEST);
-	//--- 렌더링 파이프라인에 세이더 불러오기
-	glUseProgram(s_program);
+		glDisable(GL_DEPTH_TEST);
+
 	//--- 사용할 VAO 불러오기
 	//--- 삼각형 그리기
 	glBindVertexArray(VAO);
 
-
-	TR = R * T;
-
 	glm::mat4 unit = glm::mat4(1.0f);
 
-
-	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
-
 	int vColorLocation = glGetUniformLocation(s_program, "shape_color");
-
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
-
+	CTR = CR * CT;
+	glUseProgram(coord_s_program);
+	unsigned int coord_modelLocation = glGetUniformLocation(coord_s_program, "coord_modelTransform");
+	glUniformMatrix4fv(coord_modelLocation, 1, GL_FALSE, glm::value_ptr(CTR));
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
+
+	TR = R * T;
+	glUseProgram(s_program);
+	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * 6));
 	
+	lTR = lR * lT;
+	glUseProgram(l_s_program);
+	unsigned int lmodelLocation = glGetUniformLocation(l_s_program, "lmodelTransform");
+	glUniformMatrix4fv(lmodelLocation, 1, GL_FALSE, glm::value_ptr(lTR));
+
+	qobj = gluNewQuadric();
+	gluQuadricDrawStyle(qobj, GLU_LINE);
+	//gluQuadricNormals(qobj, GLU_SMOOTH);
+	//gluQuadricOrientation(qobj, GLU_OUTSIDE);
+	gluSphere(qobj, 0.3, 50, 50);
+
 
 	if (w_draw) {
 		glPolygonMode(GL_FRONT, GL_LINE);
@@ -388,9 +445,17 @@ void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 
 void Init()
 {
+	CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.0));
+	CR = glm::rotate(CR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
+	CR = glm::rotate(CR, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+
 	T = glm::translate(T, glm::vec3(-0.5, 0.0, 0.0));
 	R = glm::rotate(R, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
-	R = glm::rotate(R, glm::radians(-45.0f), glm::vec3(0.0, 1.0, 0.0));
+	R = glm::rotate(R, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+
+	lT = glm::translate(lT, glm::vec3(0.5, 0.0, 0.0));
+	lR = glm::rotate(lR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
+	lR = glm::rotate(lR, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
