@@ -209,7 +209,8 @@ GLvoid drawScene()
 	if (!depth_draw)
 		glEnable(GL_DEPTH_TEST);
 	else
-		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_DEPTH_TEST);
+
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(s_program);
 	//--- 사용할 VAO 불러오기

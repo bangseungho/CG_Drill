@@ -7,9 +7,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <random>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp>
+#include <gl/glm/glm/glm.hpp>
+#include <gl/glm/glm/ext.hpp>
+#include <gl/glm/glm/gtc/matrix_transform.hpp>
 
 using namespace std;
 
@@ -43,8 +43,12 @@ static bool w_draw = false;
 static bool depth_draw = false;
 static int rotate_cw_x = 2;
 static int rotate_cw_y = 2;
+static int rotate_cw_a = 2;
+static int rotate_cw_b = 2;
+static int rotate_cw_r = 2;
 static int key_down = 0;
 static int reset = false;
+static int t_shape = 0;
 int cross_shape[3][2];
 
 char* filetobuf(const char* file)
@@ -248,6 +252,7 @@ glm::mat4 CR = glm::mat4(1.0f); //--- 회전 행렬 선언
 glm::mat4 CT = glm::mat4(1.0f); //--- 이동 행렬 선언
 glm::mat4 CTR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
+
 glm::mat4 lR = glm::mat4(1.0f); //--- 회전 행렬 선언
 glm::mat4 lT = glm::mat4(1.0f); //--- 이동 행렬 선언
 glm::mat4 lTR = glm::mat4(1.0f); //--- 합성 변환 행렬
@@ -269,6 +274,8 @@ GLvoid drawScene()
 
 	glm::mat4 unit = glm::mat4(1.0f);
 
+
+
 	int vColorLocation = glGetUniformLocation(s_program, "shape_color");
 	CTR = CR * CT;
 	glUseProgram(coord_s_program);
@@ -276,32 +283,56 @@ GLvoid drawScene()
 	glUniformMatrix4fv(coord_modelLocation, 1, GL_FALSE, glm::value_ptr(CTR));
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 
-	TR = R * T;
+	TR = CR * T * R;
 	glUseProgram(s_program);
 	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * 6));
+
+	if (t_shape == 0)
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * 6));
+	else {
+
+		gluCylinder(qobj, 0.3, 0.3, 0.5, 10, 8);
+	}
 	
-	lTR = lR * lT;
+	lTR = CR * lT * lR;
 	glUseProgram(l_s_program);
 	unsigned int lmodelLocation = glGetUniformLocation(l_s_program, "lmodelTransform");
 	glUniformMatrix4fv(lmodelLocation, 1, GL_FALSE, glm::value_ptr(lTR));
+
+	if (reset) {
+		CTR = glm::mat4(1.0f);
+		CT = glm::mat4(1.0f);
+		CR = glm::mat4(1.0f);
+
+		CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.0));
+		CR = glm::rotate(CR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
+		CR = glm::rotate(CR, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+
+		R = glm::mat4(1.0f);
+		lR = glm::mat4(1.0f);
+
+		rotate_cw_r = 2;
+		rotate_cw_x = 2;
+		rotate_cw_y = 2;
+		rotate_cw_a = 2;
+		rotate_cw_b = 2;
+		reset = false;
+	}
 
 	qobj = gluNewQuadric();
 	gluQuadricDrawStyle(qobj, GLU_LINE);
 	//gluQuadricNormals(qobj, GLU_SMOOTH);
 	//gluQuadricOrientation(qobj, GLU_OUTSIDE);
-	gluSphere(qobj, 0.3, 50, 50);
+
+	if (t_shape == 0)
+		gluSphere(qobj, 0.3, 20, 20);
+	else
+		gluCylinder(qobj, 0.3, 0.0, 0.5, 10, 8);
 
 
-	if (w_draw) {
-		glPolygonMode(GL_FRONT, GL_LINE);
-		glPolygonMode(GL_BACK, GL_LINE);
-	}
-	else if(!w_draw) {
-		glPolygonMode(GL_FRONT, GL_FILL);
-		glPolygonMode(GL_BACK, GL_FILL);
-	}
+	glPolygonMode(GL_FRONT, GL_LINE);
+	glPolygonMode(GL_BACK, GL_LINE);
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
@@ -328,75 +359,67 @@ void KeyUp(int z, int x, int y)
 
 void Keyboard(unsigned char key, int x, int y)
 {
-		switch (key)
-		{
-		case 'c':
-			if (!c_draw) {
-				p_draw = false;
-				c_draw = true;
-			}
-			break;
-		case 'p':
-			if (!p_draw) {
-				p_draw = true;
-				c_draw = false;
-			}
-			break;
-		case 'w':
-			if (!w_draw)
-				w_draw = true;
-			else
-				w_draw = false;
-			break;
-		case 'h':
-			if (!depth_draw)
-				depth_draw = true;
-			else
-				depth_draw = false;
-			break;
-		case 'x':
-			rotate_cw_y = 2;
-			if (rotate_cw_x == 2 || rotate_cw_x == 1)
-				rotate_cw_x = 0;
-			else
-				rotate_cw_x = 1;
-			break;
-		case 'y':
-			rotate_cw_x = 2;
-			if (rotate_cw_y == 2 || rotate_cw_y == 1)
-				rotate_cw_y = 0;
-			else
-				rotate_cw_y = 1;
-			break;
-		case 's':
-			reset = true;
-			break;
-		case 'q':
-			exit(1);
-			break;
+	switch (key)
+	{
+	case 'x':
+		rotate_cw_y = 2;
+		if (rotate_cw_x == 2 || rotate_cw_x == 1)
+			rotate_cw_x = 0;
+		else
+			rotate_cw_x = 1;
+		break;
+	case 'y':
+		rotate_cw_x = 2;
+		if (rotate_cw_y == 2 || rotate_cw_y == 1)
+			rotate_cw_y = 0;
+		else
+			rotate_cw_y = 1;
+		break;
+	case 'a':
+		rotate_cw_a = 2;
+		if (rotate_cw_b == 2 || rotate_cw_b == 1)
+			rotate_cw_b = 0;
+		else
+			rotate_cw_b = 1;
+		break;
+	case 'b':
+		rotate_cw_b = 2;
+		if (rotate_cw_a == 2 || rotate_cw_a == 1)
+			rotate_cw_a = 0;
+		else
+			rotate_cw_a = 1;
+		break;
+	case 'r':
+
+		if (rotate_cw_r == 1)
+			rotate_cw_r = 0;
+		else
+			rotate_cw_r = 1;
+		break;
+	case 'c':
+
+		if (t_shape == 1) {
+			t_shape = 0;
+		}
+		else {
+			t_shape = 1;
 		}
 
 
+		break;
+	case 's':
+		reset = true;
+		break;
+	
+	case 'q':
+		exit(1);
+		break;
+	}
 }
 
 void special(int key, int x, int y)
 {
-	if (key == GLUT_KEY_LEFT)
-	{
-		key_down = 1;
-	}
-	if (key == GLUT_KEY_RIGHT)
-	{
-		key_down = 2;
-	}
-	if (key == GLUT_KEY_UP)
-	{
-		key_down = 3;
-	}
-	if (key == GLUT_KEY_DOWN)
-	{
-		key_down = 4;
-	}
+
 }
 
 void TimerFunction(int value)
@@ -412,22 +435,20 @@ void TimerFunction(int value)
 	else if (rotate_cw_y == 1)
 		R = glm::rotate(R, glm::radians(-rotate_value), glm::vec3(0.0, 1.0, 0.0));
 
-	if (key_down != 0)
-	{
-		switch (key_down) {
-		case 1:
-			T = glm::translate(T, glm::vec3(-0.005, 0.0, 0.0));
-			break;
-		case 2:
-			T = glm::translate(T, glm::vec3(0.005, 0.0, 0.0));
-			break;
-		case 3:
-			T = glm::translate(T, glm::vec3(0.0, 0.005, 0.0));
-			break;
-		case 4:
-			T = glm::translate(T, glm::vec3(0.0, -0.005, 0.0));
-			break;
-		}
+	if (rotate_cw_a == 0)
+		lR = glm::rotate(lR, glm::radians(rotate_value), glm::vec3(1.0, 0.0, 0.0));
+	else if (rotate_cw_a == 1)
+		lR = glm::rotate(lR, glm::radians(-rotate_value), glm::vec3(1.0, 0.0, 0.0));
+	else if (rotate_cw_b == 0)
+		lR = glm::rotate(lR, glm::radians(rotate_value), glm::vec3(0.0, 1.0, 0.0));
+	else if (rotate_cw_b == 1)
+		lR = glm::rotate(lR, glm::radians(-rotate_value), glm::vec3(0.0, 1.0, 0.0));
+
+	if (rotate_cw_r == 0) {
+		CR = glm::rotate(CR, glm::radians(rotate_value), glm::vec3(0.0, 1.0, 0.0));
+	}
+	else if (rotate_cw_r == 1) {
+		CR = glm::rotate(CR, glm::radians(-rotate_value), glm::vec3(0.0, 1.0, 0.0));
 	}
 
 	InitBuffer();
@@ -449,13 +470,9 @@ void Init()
 	CR = glm::rotate(CR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
 	CR = glm::rotate(CR, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
 
-	T = glm::translate(T, glm::vec3(-0.5, 0.0, 0.0));
-	R = glm::rotate(R, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
-	R = glm::rotate(R, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+	T = glm::translate(T, glm::vec3(0.5, 0.0, 0.0));
 
-	lT = glm::translate(lT, glm::vec3(0.5, 0.0, 0.0));
-	lR = glm::rotate(lR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
-	lR = glm::rotate(lR, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+	lT = glm::translate(lT, glm::vec3(-0.5, 0.0, 0.0));
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
