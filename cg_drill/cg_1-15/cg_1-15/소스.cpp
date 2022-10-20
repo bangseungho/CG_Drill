@@ -7,9 +7,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <random>
-#include <gl/glm/glm/glm.hpp>
-#include <gl/glm/glm/ext.hpp>
-#include <gl/glm/glm/gtc/matrix_transform.hpp>
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
 
 using namespace std;
 
@@ -48,6 +48,12 @@ static int rotate_cw_b = 2;
 static int rotate_cw_r = 2;
 static int key_down = 0;
 static int reset = false;
+static int l_scale = false;
+static int r_scale = false;
+static int l_p_scale = false;
+static int r_p_scale = false;
+static int who_translate = 0;
+static int y_translate = true;
 static int t_shape = 0;
 int cross_shape[3][2];
 
@@ -285,7 +291,10 @@ GLvoid drawScene()
 	glUniformMatrix4fv(coord_modelLocation, 1, GL_FALSE, glm::value_ptr(CTR));
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 
-	TR =  CR * T * R * S;
+	if(!r_p_scale)
+		TR = CR * T * R * S * CT;
+	else
+		TR = S * CR * T * R * CT;
 	glUseProgram(s_program);
 	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
@@ -297,7 +306,11 @@ GLvoid drawScene()
 		gluCylinder(qobj, 0.1, 0.1, 0.2, 10, 8);
 	}
 	
-	lTR = CR * lT * lR * lS;
+	if (!l_p_scale)
+		lTR = CR * lT * lR * lS * CT;
+	else
+		lTR = lS * CR * lT * lR * CT;
+
 	glUseProgram(l_s_program);
 	unsigned int lmodelLocation = glGetUniformLocation(l_s_program, "lmodelTransform");
 	glUniformMatrix4fv(lmodelLocation, 1, GL_FALSE, glm::value_ptr(lTR));
@@ -363,51 +376,55 @@ void Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 'x':
-		rotate_cw_y = 2;
-		if (rotate_cw_x == 2 || rotate_cw_x == 1)
-			rotate_cw_x = 0;
+	case '3':
+		r_p_scale = false;
+		if (r_scale) {
+			r_scale = false;
+		}
 		else
-			rotate_cw_x = 1;
+			r_scale = true;
 		break;
-	case 'y':
-		rotate_cw_x = 2;
-		if (rotate_cw_y == 2 || rotate_cw_y == 1)
-			rotate_cw_y = 0;
+	case '4':
+		l_p_scale = false;
+		if (l_scale)
+			l_scale = false;
 		else
-			rotate_cw_y = 1;
+			l_scale = true;
 		break;
-	case 'a':
-		rotate_cw_a = 2;
-		if (rotate_cw_b == 2 || rotate_cw_b == 1)
-			rotate_cw_b = 0;
-		else
-			rotate_cw_b = 1;
-		break;
-	case 'b':
-		rotate_cw_b = 2;
-		if (rotate_cw_a == 2 || rotate_cw_a == 1)
-			rotate_cw_a = 0;
-		else
-			rotate_cw_a = 1;
-		break;
-	case 'r':
-
-		if (rotate_cw_r == 1)
-			rotate_cw_r = 0;
-		else
-			rotate_cw_r = 1;
-		break;
-	case 'c':
-
-		if (t_shape == 1) {
-			t_shape = 0;
+	case '5':
+		if (r_scale) {
+			r_p_scale = false;
+			r_scale = false;
 		}
 		else {
-			t_shape = 1;
+			r_p_scale = true;
+			r_scale = true;
 		}
-
-
+		break;
+	case '6':
+		if (l_scale) {
+			l_p_scale = false;
+			l_scale = false;
+		}
+		else {
+			l_p_scale = true;
+			l_scale = true;
+		}
+		break;
+	case '1':
+		who_translate = 1;
+		break;
+	case '2':
+		who_translate = 2;
+		break;
+	case '0':
+		who_translate = 0;
+		break;
+	case 'y':
+		if (y_translate)
+			y_translate = false;
+		else
+			y_translate = true;
 		break;
 	case 's':
 		reset = true;
@@ -421,16 +438,103 @@ void Keyboard(unsigned char key, int x, int y)
 
 void special(int key, int x, int y)
 {
-
+	if (key == GLUT_KEY_LEFT)
+	{
+		key_down = 1;
+	}
+	if (key == GLUT_KEY_RIGHT)
+	{
+		key_down = 2;
+	}
+	if (key == GLUT_KEY_UP)
+	{
+		key_down = 3;
+	}
+	if (key == GLUT_KEY_DOWN)
+	{
+		key_down = 4;
+	}
 }
 
 void TimerFunction(int value)
 {
 	static float rotate_value = 0.1;
-	static float cnt = 0;
-	S = glm::scale(S, glm::vec3(1.0 + cnt, 1.0 + cnt, 1.0 + cnt));
-	lS = glm::scale(S, glm::vec3(1.0 + cnt, 1.0 + cnt, 1.0 + cnt));
-	cnt += 0.000001;
+	static float rcnt = 1.001;
+	static float lcnt = 1.001;
+	static float rtemp_value = 1.0;
+	static float ltemp_value = 1.0;
+
+	if (r_scale == true) {
+		rtemp_value += rcnt - 1;
+		S = glm::scale(S, glm::vec3(rcnt));
+	}
+	if (l_scale == true) {
+		ltemp_value += lcnt - 1;
+		lS = glm::scale(lS, glm::vec3(lcnt));
+	}
+
+	if (rtemp_value >= 1.5)
+		rcnt = 0.999;
+	if (rtemp_value <= 1.0)
+		rcnt = 1.001;
+
+	if (ltemp_value >= 1.5)
+		lcnt = 0.999;
+	if (ltemp_value <= 1.0)
+		lcnt = 1.001;
+		
+	if (key_down != 0)
+	{
+		switch (key_down) {
+			{
+		case 1:
+			if (who_translate == 0)
+				CT = glm::translate(CT, glm::vec3(-0.005, 0.0, 0.0));
+			if (who_translate == 1)
+				T = glm::translate(T, glm::vec3(-0.005, 0.0, 0.0));
+			if (who_translate == 2)
+				lT = glm::translate(lT, glm::vec3(-0.005, 0.0, 0.0));
+
+			break;
+		case 2:
+			if (who_translate == 0)
+				CT = glm::translate(CT, glm::vec3(0.005, 0.0, 0.0));
+			if (who_translate == 1)
+				T = glm::translate(T, glm::vec3(0.005, 0.0, 0.0));
+			if (who_translate == 2)
+				lT = glm::translate(lT, glm::vec3(0.005, 0.0, 0.0));
+			break;
+		case 3:
+			if (who_translate == 0)
+				CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.005));
+			if (who_translate == 1) {
+				T = glm::translate(T, glm::vec3(0.0, 0.0, 0.005));
+				if (!y_translate)
+					T = glm::translate(T, glm::vec3(0.0, 0.005, 0.0));
+			}
+			if (who_translate == 2) {
+				lT = glm::translate(lT, glm::vec3(0.0, 0.0, 0.005));
+				if (!y_translate)
+					lT = glm::translate(lT, glm::vec3(0.0, 0.005, 0.0));
+			}
+			break;
+		case 4:
+			if (who_translate == 0)
+				CT = glm::translate(CT, glm::vec3(0.0, 0.0, -0.005));
+			if (who_translate == 1) {
+				T = glm::translate(T, glm::vec3(0.0, 0.0, -0.005));
+				if (!y_translate)
+					T = glm::translate(T, glm::vec3(0.0, -0.005, 0.0));
+			}
+			if (who_translate == 2) {
+				lT = glm::translate(lT, glm::vec3(0.0, 0.0, -0.005));
+				if (!y_translate)
+					lT = glm::translate(lT, glm::vec3(0.0, -0.005, 0.0));
+			}
+			break;
+			}
+		}
+	}
 
 	if(rotate_cw_x == 0)
 		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(1.0, 0.0, 0.0));
