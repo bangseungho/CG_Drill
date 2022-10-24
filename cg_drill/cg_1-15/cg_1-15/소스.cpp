@@ -166,6 +166,11 @@ void InitShader()
 	glDeleteShader(fragmentshader);
 }
 
+
+GLfloat point[480] = {
+
+};
+
 void InitBuffer()
 {
 	GLfloat vertices[] = {
@@ -185,16 +190,6 @@ void InitBuffer()
 		 0.1, 0.1, -0.1,	 0.0, 1.0, 1.0,
 		 -0.1, 0.1, 0.1,	0.5, 0.0, 1.0,
 		 0.1, 0.1, 0.1,		 0.0, 0.5, 1.0,
-
-
-		// 0.0, 0.4, 0.0,	0.0, 0.5, 1.0,
-		//-0.4, -0.4, -0.4,	1.0, 0.0, 0.0,
-		// 0.4, -0.4, -0.4,	0.0, 1.0, 0.0,
-		// 0.4, -0.4, 0.4,	1.0, 0.0, 1.0,
-		// -0.4, -0.4, 0.4,	0.0, 0.0, 1.0,
-
-
-
 	};
 
 	unsigned int index[] = {
@@ -281,8 +276,6 @@ GLvoid drawScene()
 	glBindVertexArray(VAO);
 
 	glm::mat4 unit = glm::mat4(1.0f);
-
-
 
 	int vColorLocation = glGetUniformLocation(s_program, "shape_color");
 	CTR = CR * CT;
@@ -508,28 +501,32 @@ void TimerFunction(int value)
 			if (who_translate == 0)
 				CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.005));
 			if (who_translate == 1) {
-				T = glm::translate(T, glm::vec3(0.0, 0.0, 0.005));
 				if (!y_translate)
 					T = glm::translate(T, glm::vec3(0.0, 0.005, 0.0));
+				else
+					T = glm::translate(T, glm::vec3(0.0, 0.0, 0.005));
 			}
 			if (who_translate == 2) {
-				lT = glm::translate(lT, glm::vec3(0.0, 0.0, 0.005));
 				if (!y_translate)
 					lT = glm::translate(lT, glm::vec3(0.0, 0.005, 0.0));
+				else 
+					lT = glm::translate(lT, glm::vec3(0.0, 0.0, 0.005));
 			}
 			break;
 		case 4:
 			if (who_translate == 0)
 				CT = glm::translate(CT, glm::vec3(0.0, 0.0, -0.005));
 			if (who_translate == 1) {
-				T = glm::translate(T, glm::vec3(0.0, 0.0, -0.005));
 				if (!y_translate)
 					T = glm::translate(T, glm::vec3(0.0, -0.005, 0.0));
+				else
+					T = glm::translate(T, glm::vec3(0.0, 0.0, -0.005));
 			}
 			if (who_translate == 2) {
-				lT = glm::translate(lT, glm::vec3(0.0, 0.0, -0.005));
 				if (!y_translate)
 					lT = glm::translate(lT, glm::vec3(0.0, -0.005, 0.0));
+				else
+					lT = glm::translate(lT, glm::vec3(0.0, 0.0, -0.005));
 			}
 			break;
 			}
@@ -583,6 +580,14 @@ void Init()
 	T = glm::translate(T, glm::vec3(0.5, 0.0, 0.0));
 
 	lT = glm::translate(lT, glm::vec3(-0.5, 0.0, 0.0));
+	int j = 0;
+	float radius = 0;
+	for (int i = 0; i < 480; ++i) {
+		point[j] = 0 + radius * sin(i / 360 * 2 * 3.1415926535);
+		point[j + 2] = 0 + radius * sin(i / 360 * 2 * 3.1415926535);
+		radius += 0.05;
+		j += 3;
+	}
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정

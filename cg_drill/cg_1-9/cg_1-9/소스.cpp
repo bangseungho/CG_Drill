@@ -151,7 +151,7 @@ GLvoid drawScene()
 	glPointSize(5);
 
 	if (mouse_flag)
-		glDrawArrays(GL_POINTS, 0, cnt);
+		glDrawArrays(GL_LINE_SMOOTH, 0, cnt);
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 }

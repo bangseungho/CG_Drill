@@ -181,7 +181,8 @@ GLvoid drawScene()
 	//--- 변경된 배경색 설정
 	glClearColor(0.0, 0.0, 0.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(s_program);
 	//--- 사용할 VAO 불러오기
