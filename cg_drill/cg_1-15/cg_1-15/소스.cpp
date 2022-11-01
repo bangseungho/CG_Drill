@@ -7,19 +7,18 @@
 #include <math.h>
 #include <stdio.h>
 #include <random>
-#include <gl/glm/glm.hpp>
 #include <gl/glm/ext.hpp>
+#include <gl/glm/glm.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
-
 using namespace std;
 
 GLchar* vertexsource, * lvertexsource, * fragmentsource; //--- 소스코드 저장 변수
 GLchar* coord_vertexsource;
 GLuint vertexshader, lvertexshader, fragmentshader; //--- 세이더 객체
 GLuint coord_vertexshader;
-GLUquadricObj * qobj;
+GLUquadricObj* qobj;
 
-GLuint VAO, VBO, VBO_line, EBO;
+GLuint VAO, VAO2, VBO, VBO_tornado, EBO;
 
 GLvoid Reshape(int w, int h);
 const double pi = 3.14159265358979;
@@ -55,7 +54,12 @@ static int r_p_scale = false;
 static int who_translate = 0;
 static int y_translate = true;
 static int t_shape = 0;
+static int tornado_flag = false;
+static int ToPoint_flag = false;
 int cross_shape[3][2];
+int tdegree = 0;
+float tradius = 0;
+
 
 char* filetobuf(const char* file)
 {
@@ -166,13 +170,20 @@ void InitShader()
 	glDeleteShader(fragmentshader);
 }
 
-
-GLfloat point[480] = {
-
+struct pos {
+	GLfloat x;
+	GLfloat y;
+	GLfloat z;
+	GLfloat r;
+	GLfloat g;
+	GLfloat b;
 };
+
+vector<pos> tornado;
 
 void InitBuffer()
 {
+
 	GLfloat vertices[] = {
 		-1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
 		1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
@@ -193,7 +204,7 @@ void InitBuffer()
 	};
 
 	unsigned int index[] = {
-		0, 1, 
+		0, 1,
 		2, 3,
 		4, 5,
 
@@ -204,13 +215,13 @@ void InitBuffer()
 		10, 12, 13,
 
 		11, 13, 7, // 우측면
-		7, 13, 9, 
+		7, 13, 9,
 
 		10, 6, 8, // 왼쪽면
-		10, 8, 12, 
+		10, 8, 12,
 
 		8, 9, 12, // 뒷면
-		9, 13, 12, 
+		9, 13, 12,
 
 		11, 7, 6, // 앞면
 		10, 11, 6,
@@ -219,14 +230,15 @@ void InitBuffer()
 
 		15, 17, 18,
 		15, 16, 17,
-		14, 15, 18, 
-		14, 16, 15, 
-		14, 17, 16, 
+		14, 15, 18,
+		14, 16, 15,
+		14, 17, 16,
 		14, 18, 17,
 	};
 
 	glGenVertexArrays(1, &VAO); //--- VAO 를 지정하고 할당하기
 	glBindVertexArray(VAO); //--- VAO를 바인드하기
+
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -239,6 +251,20 @@ void InitBuffer()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
 
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	//=============================================================================================
+
+	glGenVertexArrays(1, &VAO2); //--- VAO 를 지정하고 할당하기
+	glBindVertexArray(VAO2); //--- VAO를 바인드하기
+
+	glGenBuffers(1, &VBO_tornado);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_tornado);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT) * 3 * 400, &tornado[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
@@ -270,21 +296,26 @@ GLvoid drawScene()
 		glEnable(GL_DEPTH_TEST);
 	else
 		glDisable(GL_DEPTH_TEST);
-
+	
 	//--- 사용할 VAO 불러오기
 	//--- 삼각형 그리기
+	glBindVertexArray(VAO2);
+	glUseProgram(coord_s_program);
+	glPointSize(1);
+	cout << T.length;
+	if (tornado_flag)
+		glDrawArrays(GL_LINE_STRIP, 0, 200);
+
 	glBindVertexArray(VAO);
 
 	glm::mat4 unit = glm::mat4(1.0f);
 
-	int vColorLocation = glGetUniformLocation(s_program, "shape_color");
 	CTR = CR * CT;
-	glUseProgram(coord_s_program);
 	unsigned int coord_modelLocation = glGetUniformLocation(coord_s_program, "coord_modelTransform");
 	glUniformMatrix4fv(coord_modelLocation, 1, GL_FALSE, glm::value_ptr(CTR));
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 
-	if(!r_p_scale)
+	if (!r_p_scale)
 		TR = CR * T * R * S * CT;
 	else
 		TR = S * CR * T * R * CT;
@@ -298,7 +329,7 @@ GLvoid drawScene()
 
 		gluCylinder(qobj, 0.1, 0.1, 0.2, 10, 8);
 	}
-	
+
 	if (!l_p_scale)
 		lTR = CR * lT * lR * lS * CT;
 	else
@@ -312,6 +343,7 @@ GLvoid drawScene()
 		CTR = glm::mat4(1.0f);
 		CT = glm::mat4(1.0f);
 		CR = glm::mat4(1.0f);
+
 
 		CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.0));
 		CR = glm::rotate(CR, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
@@ -356,7 +388,7 @@ void Mouse(int button, int state, int x, int y)
 
 	if (button == GLUT_LEFT_BUTTON)
 	{
-		
+
 	}
 }
 
@@ -422,7 +454,31 @@ void Keyboard(unsigned char key, int x, int y)
 	case 's':
 		reset = true;
 		break;
-	
+	case 'r':
+		if (tornado_flag) {
+			tornado_flag = false;
+		}
+		else {
+			tdegree = 0;
+			tradius = 0;
+			tornado_flag = true;
+			CT = glm::mat4(1.0f);
+			CT = glm::translate(CT, glm::vec3(0.0, 0.0, 0.0));
+
+			T = glm::mat4(1.0f);
+			T = glm::translate(T, glm::vec3(0.0, 0.0, 0.0));
+
+			lT = glm::mat4(1.0f);
+			lT = glm::translate(T, glm::vec3(0.0, 0.0, 0.0));
+		}
+		break;
+	case 't':
+		if (ToPoint_flag)
+			ToPoint_flag = false;
+		else
+			ToPoint_flag = true;
+		break;
+		break;
 	case 'q':
 		exit(1);
 		break;
@@ -447,6 +503,27 @@ void special(int key, int x, int y)
 	{
 		key_down = 4;
 	}
+}
+
+
+void TimerRotateTornado(int Value) {
+	float rotate_x = tradius * sin(tdegree / 360.0 * 2 * pi);
+	float rotate_z = tradius * cos(tdegree / 360.0 * 2 * pi);
+
+	if (tornado_flag) {
+		T = glm::mat4(1.0f);
+		T = glm::translate(T, glm::vec3(rotate_x, 0.0, 0.0));
+		T = glm::translate(T, glm::vec3(0.0, 0.0, rotate_z));
+
+		lT = glm::mat4(1.0f);
+		lT = glm::translate(lT, glm::vec3(-rotate_x, 0.0, 0.0));
+		lT = glm::translate(lT, glm::vec3(0.0, 0.0, -rotate_z));
+	}
+
+	tdegree += 10;
+	tradius += 0.005;
+	if (tradius < 1)
+		glutTimerFunc(100, TimerRotateTornado, 2);
 }
 
 void TimerFunction(int value)
@@ -475,7 +552,7 @@ void TimerFunction(int value)
 		lcnt = 0.999;
 	if (ltemp_value <= 1.0)
 		lcnt = 1.001;
-		
+
 	if (key_down != 0)
 	{
 		switch (key_down) {
@@ -509,7 +586,7 @@ void TimerFunction(int value)
 			if (who_translate == 2) {
 				if (!y_translate)
 					lT = glm::translate(lT, glm::vec3(0.0, 0.005, 0.0));
-				else 
+				else
 					lT = glm::translate(lT, glm::vec3(0.0, 0.0, 0.005));
 			}
 			break;
@@ -533,9 +610,9 @@ void TimerFunction(int value)
 		}
 	}
 
-	if(rotate_cw_x == 0)
+	if (rotate_cw_x == 0)
 		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(1.0, 0.0, 0.0));
-	else if(rotate_cw_x == 1)
+	else if (rotate_cw_x == 1)
 		R = glm::rotate(R, glm::radians(-rotate_value), glm::vec3(1.0, 0.0, 0.0));
 	else if (rotate_cw_y == 0)
 		R = glm::rotate(R, glm::radians(rotate_value), glm::vec3(0.0, 1.0, 0.0));
@@ -563,6 +640,20 @@ void TimerFunction(int value)
 	glutTimerFunc(1, TimerFunction, 1);
 }
 
+
+
+void TimerToPoint(int value) {
+
+	
+
+	if (ToPoint_flag == true)
+		T = glm::translate(T, glm::vec3(-0.002, 0.0, 0.0));
+	if (ToPoint_flag == true)
+		lT = glm::translate(lT, glm::vec3(0.002, 0.0, 0.0));
+
+	glutTimerFunc(10, TimerToPoint, 3);
+}
+
 void convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 {
 	int w = 800;
@@ -580,14 +671,27 @@ void Init()
 	T = glm::translate(T, glm::vec3(0.5, 0.0, 0.0));
 
 	lT = glm::translate(lT, glm::vec3(-0.5, 0.0, 0.0));
-	int j = 0;
+
+	double degree = 0;
 	float radius = 0;
-	for (int i = 0; i < 480; ++i) {
-		point[j] = 0 + radius * sin(i / 360 * 2 * 3.1415926535);
-		point[j + 2] = 0 + radius * sin(i / 360 * 2 * 3.1415926535);
-		radius += 0.05;
-		j += 3;
+	GLfloat x = 0;
+	GLfloat y = 0;
+	GLfloat z = 0;
+	GLfloat r = 0.5;
+	GLfloat g = 0.3;
+	GLfloat b = 0.1;
+
+
+	for (int i = 0; i < 200; ++i) {
+		x = radius * sin(degree / 360 * 2 * pi);
+		z = radius * cos(degree / 360 * 2 * pi);
+
+		tornado.push_back({ x, y, z, r, g, b });
+		degree += 10;
+		radius += 0.005;
+
 	}
+
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
@@ -611,6 +715,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutSpecialFunc(special);
 	glutSpecialUpFunc(KeyUp);
 	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(100, TimerRotateTornado, 2);
+	glutTimerFunc(100, TimerToPoint, 3);
 	glutMainLoop();
 }
 
