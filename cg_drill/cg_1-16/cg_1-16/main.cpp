@@ -4,6 +4,9 @@
 
 using namespace std;
 
+random_device rd;
+default_random_engine dre(rd());
+uniform_real_distribution<float> urd{0.0, 1.0};
 GLchar* coord_vertexsource, * obj1_vertexsource;
 GLchar* fragmentsource; //--- 소스코드 저장 변수
 GLuint coord_vertexshader, obj1_vertexshader;
@@ -43,6 +46,7 @@ protected:
 	GLuint vao;
 	GLuint vbo_position;
 	GLuint vbo_normal;
+	GLuint vbo_color;
 	vector<Vertice> vertices; // 꼭짓점 모델 좌표 정보
 	Vec3d _trans_info; // 현재 이동 변환 정보
 	Vec3d _rotate_info; // 현재 회전 변환 정보
@@ -141,11 +145,19 @@ class Obj : public Object
 {
 	objRead objReader;
 	GLint obj;
+	vector<Color> colors;
 
 public:
 	GLvoid init(const char* modelTransform, const char* objfile) {
 		obj = objReader.loadObj_normalize_center(objfile);
 		this->modelTransform = modelTransform;
+		setcolor();
+	}
+
+	GLvoid setcolor() {
+		for (int i{}; i < objReader.outvertex.size(); ++i) {
+			colors.push_back({ urd(dre), urd(dre), urd(dre) });
+		}
 	}
 
 	GLvoid set_vbo() {
@@ -153,8 +165,6 @@ public:
 		glBindVertexArray(vao); //--- VAO를 바인드하기
 
 		glGenBuffers(1, &vbo_position);
-		glGenBuffers(1, &vbo_normal);
-		glGenBuffers(1, &vbo_normal);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 		glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &objReader.outvertex[0], GL_STATIC_DRAW);
@@ -162,12 +172,15 @@ public:
 		glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(pAttribute);
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_normal);
-		glBufferData(GL_ARRAY_BUFFER, objReader.outnormal.size() * sizeof(glm::vec3), &objReader.outnormal[0], GL_STATIC_DRAW);
-		GLint nAttribute = glGetAttribLocation(obj1_s_program, "aNormal");
-		glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-		glEnableVertexAttribArray(nAttribute);
+		glGenBuffers(1, &vbo_color);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
+		glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+		GLint cAttribute = glGetAttribLocation(obj1_s_program, "vColor");
+		glVertexAttribPointer(cAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(cAttribute);
 	}
+
 
 	GLvoid draw(GLuint s_program) {
 		glBindVertexArray(vao); //--- VAO를 바인드하기
@@ -309,13 +322,9 @@ GLvoid drawScene()
 
 	line.draw(coord_s_program);
 
-	hexi.rotate(0.5, 0, 1, 0);
 	hexi.draw(obj1_s_program);
 
-	dragonLee.rotate(-0.1, 0, 1, 0);
-	dragonLee.draw(obj1_s_program);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glutSwapBuffers(); //--- 화면에 출력하기
 }
 
@@ -377,11 +386,6 @@ void Init()
 	hexi.rotate(30, 1, 0, 0);
 	hexi.rotate(30, 0, 1, 0);
 	hexi.scale(0.3);
-
-	dragonLee.init("obj1_modelTransform", "dragonLee.obj");
-	dragonLee.rotate(30, 1, 0, 0);
-	dragonLee.rotate(30, 0, 1, 0);
-	dragonLee.scale(0.3);
 
 	//line.scale(0.3);
 
