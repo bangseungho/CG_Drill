@@ -135,6 +135,7 @@
   <ItemGroup>
     <None Include="coord_vertex.glsl" />
     <None Include="fragment.glsl" />
+    <None Include="obj1_vertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="objRead.h" />

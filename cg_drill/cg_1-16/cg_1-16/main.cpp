@@ -4,19 +4,16 @@
 
 using namespace std;
 
-GLchar* coord_vertexsource, * fragmentsource; //--- 소스코드 저장 변수
-GLuint coord_vertexshader, fragmentshader; //--- 세이더 객체
+GLchar* coord_vertexsource, * obj1_vertexsource;
+GLchar* fragmentsource; //--- 소스코드 저장 변수
+GLuint coord_vertexshader, obj1_vertexshader;
+GLuint fragmentshader; //--- 세이더 객체
 
 GLvoid Reshape(int w, int h);
 GLvoid convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
 
-GLuint VAO[3];
-GLuint VBO_position[3];
-GLuint VBO_normal[3];
-GLuint VBO_color[3];
-objRead objReader;
-GLint obj = objReader.loadObj_normalize_center("cube.obj");
 GLuint coord_s_program;
+GLuint obj1_s_program;
 GLfloat mx;
 GLfloat my;
 
@@ -43,6 +40,9 @@ struct Vertice
 class Object
 {
 protected:
+	GLuint vao;
+	GLuint vbo_position;
+	GLuint vbo_normal;
 	vector<Vertice> vertices; // 꼭짓점 모델 좌표 정보
 	Vec3d _trans_info; // 현재 이동 변환 정보
 	Vec3d _rotate_info; // 현재 회전 변환 정보
@@ -63,10 +63,6 @@ public:
 	}
 	~Object() {
 
-	}
-
-	GLvoid init(const char* modelTransform) {
-		this->modelTransform = modelTransform;
 	}
 
 	GLvoid push_back(Vertice vertices) {
@@ -115,21 +111,25 @@ public:
 
 class Line : public Object
 {
-	GLuint vbo;
-
 public:
+	GLvoid init(const char* modelTransform) {
+		this->modelTransform = modelTransform;
+	}
+
 	GLvoid set_vbo() {
-		glGenBuffers(1, &vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+		glGenBuffers(1, &vbo_position);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT) * 6 * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(2);
-		glBindVertexArray(0);
 	}
 
 	GLvoid draw(GLuint s_program) {
+		glBindVertexArray(vao);
 		glUseProgram(s_program);
 		unsigned int modelLocation = glGetUniformLocation(s_program, modelTransform);
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(SRT));
@@ -137,7 +137,50 @@ public:
 	}
 };
 
+class Obj : public Object
+{
+	objRead objReader;
+	GLint obj;
+
+public:
+	GLvoid init(const char* modelTransform, const char* objfile) {
+		obj = objReader.loadObj_normalize_center(objfile);
+		this->modelTransform = modelTransform;
+	}
+
+	GLvoid set_vbo() {
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+
+		glGenBuffers(1, &vbo_position);
+		glGenBuffers(1, &vbo_normal);
+		glGenBuffers(1, &vbo_normal);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
+		glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &objReader.outvertex[0], GL_STATIC_DRAW);
+		GLint pAttribute = glGetAttribLocation(obj1_s_program, "vPos");
+		glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(pAttribute);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_normal);
+		glBufferData(GL_ARRAY_BUFFER, objReader.outnormal.size() * sizeof(glm::vec3), &objReader.outnormal[0], GL_STATIC_DRAW);
+		GLint nAttribute = glGetAttribLocation(obj1_s_program, "aNormal");
+		glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(nAttribute);
+	}
+
+	GLvoid draw(GLuint s_program) {
+		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glUseProgram(s_program);
+		unsigned int obj1_modelLocation = glGetUniformLocation(s_program, modelTransform);
+		glUniformMatrix4fv(obj1_modelLocation, 1, GL_FALSE, glm::value_ptr(SRT));
+		glDrawArrays(GL_TRIANGLES, 0, obj);
+	}
+};
+
 Line line;
+Obj hexi;
+Obj dragonLee;
 
 char* filetobuf(const char* file)
 {
@@ -158,8 +201,6 @@ char* filetobuf(const char* file)
 }
 
 
-
-
 GLvoid convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 {
 	int w = 800;
@@ -171,12 +212,16 @@ GLvoid convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy)
 void make_vertexShader()
 {
 	coord_vertexsource = filetobuf("coord_vertex.glsl");
+	obj1_vertexsource = filetobuf("obj1_vertex.glsl");
 	//--- 버텍스 세이더 객체 만들기
 	coord_vertexshader = glCreateShader(GL_VERTEX_SHADER);
+	obj1_vertexshader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
 	glShaderSource(coord_vertexshader, 1, (const GLchar**)&coord_vertexsource, 0);
+	glShaderSource(obj1_vertexshader, 1, (const GLchar**)&obj1_vertexsource, 0);
 	//--- 버텍스 세이더 컴파일하기
 	glCompileShader(coord_vertexshader);
+	glCompileShader(obj1_vertexshader);
 	//--- 컴파일이 제대로 되지 않은 경우: 에러 체크
 	GLint result;
 	GLchar errorLog[512];
@@ -184,6 +229,14 @@ void make_vertexShader()
 	if (!result)
 	{
 		glGetShaderInfoLog(coord_vertexshader, 512, NULL, errorLog);
+		cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << endl;
+		return;
+	}
+
+	glGetShaderiv(obj1_vertexshader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(obj1_vertexshader, 512, NULL, errorLog);
 		cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << endl;
 		return;
 	}
@@ -216,40 +269,31 @@ void InitShader()
 	make_fragmentShader(); //--- 프래그먼트 세이더 만들기
 	//-- shader Program
 	coord_s_program = glCreateProgram();
+	obj1_s_program = glCreateProgram();
 	glAttachShader(coord_s_program, coord_vertexshader);
 	glAttachShader(coord_s_program, fragmentshader);
 	glLinkProgram(coord_s_program);
+	glAttachShader(obj1_s_program, obj1_vertexshader);
+	glAttachShader(obj1_s_program, fragmentshader);
+	glLinkProgram(obj1_s_program);
+
 
 	glDeleteShader(coord_vertexshader);
+	glDeleteShader(obj1_vertexshader);
 	glDeleteShader(fragmentshader);
 }
 
 void InitBuffer()
 {
-	glGenVertexArrays(3, VAO);
-	glGenBuffers(3, VBO_position);
-	glGenBuffers(3, VBO_normal);
-	glGenBuffers(3, VBO_color);
-
-	glBindVertexArray(VAO[0]); //--- VAO를 바인드하기
 
 	//--- line vbo
 	line.set_vbo();
 
 	//--- obj
-	glBindVertexArray(VAO[1]); //--- VAO를 바인드하기
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position[1]);
-	glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &objReader.outvertex[0], GL_STATIC_DRAW);
-	GLint pAttribute = glGetAttribLocation(coord_s_program, "vPos");
-	glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(pAttribute);
+	hexi.set_vbo();
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal[1]);
-	glBufferData(GL_ARRAY_BUFFER, objReader.outnormal.size() * sizeof(glm::vec3), &objReader.outnormal[0], GL_STATIC_DRAW);
-	GLint nAttribute = glGetAttribLocation(coord_s_program, "aNormal");
-	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(nAttribute);
-
+	//--- dragonLee
+	dragonLee.set_vbo();
 
 	glEnable(GL_DEPTH_TEST);
 	glBindVertexArray(0);
@@ -263,14 +307,13 @@ GLvoid drawScene()
 	glClearColor(0.1, 0.1, 0.1, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glBindVertexArray(VAO[0]);
-
 	line.draw(coord_s_program);
 
-	glBindVertexArray(VAO[1]);
-	
+	hexi.rotate(0.5, 0, 1, 0);
+	hexi.draw(obj1_s_program);
 
-	glDrawArrays(GL_TRIANGLES, 0, obj);
+	dragonLee.rotate(-0.1, 0, 1, 0);
+	dragonLee.draw(obj1_s_program);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glutSwapBuffers(); //--- 화면에 출력하기
@@ -329,7 +372,18 @@ void Init()
 	line.push_back({ 0.0, 0.0, 1.0, 0.0, 0.0, 1.0 });
 	line.rotate(30, 1, 0, 0);
 	line.rotate(30, 0, 1, 0);
-	line.scale(0.3);
+
+	hexi.init("obj1_modelTransform", "cube.obj");
+	hexi.rotate(30, 1, 0, 0);
+	hexi.rotate(30, 0, 1, 0);
+	hexi.scale(0.3);
+
+	dragonLee.init("obj1_modelTransform", "dragonLee.obj");
+	dragonLee.rotate(30, 1, 0, 0);
+	dragonLee.rotate(30, 0, 1, 0);
+	dragonLee.scale(0.3);
+
+	//line.scale(0.3);
 
 }
 
