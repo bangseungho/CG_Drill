@@ -69,6 +69,10 @@ public:
 
 	}
 
+	Vec3d& get_translate() { return _trans_info; };
+	Vec3d& get_rotate() { return _rotate_info; };
+	GLfloat& get_sacle() { return _scale_info; };
+
 	GLvoid push_back(Vertice vertices) {
 		this->vertices.push_back({ vertices._pos, vertices._color });
 	}
@@ -145,6 +149,7 @@ class Obj : public Object
 {
 	objRead objReader;
 	GLint obj;
+	GLuint ebo;
 	vector<Color> colors;
 
 public:
@@ -164,13 +169,17 @@ public:
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao); //--- VAO를 바인드하기
 
+		glGenBuffers(1, &ebo);
 		glGenBuffers(1, &vbo_position);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-		glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &objReader.outvertex[0], GL_STATIC_DRAW);
-		GLint pAttribute = glGetAttribLocation(obj1_s_program, "vPos");
-		glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-		glEnableVertexAttribArray(pAttribute);
+		glBufferData(GL_ARRAY_BUFFER, objReader.nr_outvertex.size() * sizeof(glm::vec3), &objReader.nr_outvertex[0], GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, objReader.vertexIndices.size(), &objReader.vertexIndices[0], GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(0);
 
 		glGenBuffers(1, &vbo_color);
 
@@ -183,11 +192,12 @@ public:
 
 
 	GLvoid draw(GLuint s_program) {
-		glBindVertexArray(vao); //--- VAO를 바인드하기
 		glUseProgram(s_program);
+		glBindVertexArray(vao); //--- VAO를 바인드하기
 		unsigned int obj1_modelLocation = glGetUniformLocation(s_program, modelTransform);
 		glUniformMatrix4fv(obj1_modelLocation, 1, GL_FALSE, glm::value_ptr(SRT));
-		glDrawArrays(GL_TRIANGLES, 0, obj);
+		glPointSize(10);
+		glDrawElements(GL_POINTS, 2, GL_UNSIGNED_INT, 0);
 	}
 };
 
@@ -296,23 +306,54 @@ void InitShader()
 	glDeleteShader(fragmentshader);
 }
 
+GLuint VAO, VBO, EBO;
+
+GLfloat v[24] = {
+	0.3, 0.3, -0.3,
+	0.3, -0.3, -0.3,
+	-0.3, -0.3, -0.3,
+	-0.3, 0.3, -0.3,
+
+	-0.3, -0.3, 0.3,
+	-0.3, 0.3, 0.3,
+	0.3, -0.3, 0.3,
+	0.3, 0.3, 0.3
+};
+
+unsigned int index[] = {
+	1, 2, 3, 
+	1, 3, 4, 
+
+	5, 6, 4, 
+	5, 4, 3, 
+
+	7, 8, 5, 
+	8, 6, 5, 
+
+	2, 1, 7, 
+	1, 8, 7, 
+
+	1, 4, 8, 
+	4, 6, 8, 
+
+	2, 7, 5, 
+	2, 5, 3
+};
+
 void InitBuffer()
 {
 
 	//--- line vbo
-	line.set_vbo();
+	//line.set_vbo();
 
 	//--- obj
 	hexi.set_vbo();
-
-	//--- dragonLee
-	dragonLee.set_vbo();
 
 	glEnable(GL_DEPTH_TEST);
 	glBindVertexArray(0);
 }
 
-glm::mat4 oS = glm::mat4(1.0f); // 신축 변환
+glm::mat4 R = glm::mat4(1.0f); // 회전 변환
 
 GLvoid drawScene()
 {
@@ -379,13 +420,13 @@ void Init()
 	line.push_back({ 0.0, -1.0, 0.0, 0.0, 1.0, 0.0 });
 	line.push_back({ 0.0, 0.0, -1.0, 0.0, 0.0, 1.0 });
 	line.push_back({ 0.0, 0.0, 1.0, 0.0, 0.0, 1.0 });
-	line.rotate(30, 1, 0, 0);
-	line.rotate(30, 0, 1, 0);
+	line.rotate(-30, 1, 0, 0);
+	line.rotate(-30, 0, 1, 0);
 
 	hexi.init("obj1_modelTransform", "cube.obj");
-	hexi.rotate(30, 1, 0, 0);
-	hexi.rotate(30, 0, 1, 0);
-	hexi.scale(0.3);
+	hexi.rotate(-30, 1, 0, 0);
+	hexi.rotate(-30, 0, 1, 0);
+	hexi.scale(0.5);
 
 	//line.scale(0.3);
 

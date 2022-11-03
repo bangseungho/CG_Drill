@@ -185,55 +185,35 @@ void InitBuffer()
 {
 
 	GLfloat vertices[] = {
-		-1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
-		1.0, 0.0, 0.0,		1.0, 0.0, 0.0,
-		0.0, 1.0, 0.0,		0.0, 1.0, 0.0,
-		0.0, -1.0, 0.0,		0.0, 1.0, 0.0,
-		0.0, 0.0, -1.0,     0.0, 0.0, 1.0,
-		0.0, 0.0, 1.0,      0.0, 0.0, 1.0,
+		0.1, 0.1, -0.1,	 
+		 0.1, -0.1, -0.1,
+		 -0.1, -0.1, -0.1,
+		 -0.1, -0.1, -0.1,
 
-		-0.1, -0.1, -0.1,	1.0, 0.0, 0.0,
-		 0.1, -0.1, -0.1,	0.0, 1.0, 0.0,
-		 -0.1, -0.1, 0.1,	0.0, 0.0, 1.0,
-		 0.1, -0.1, 0.1,	1.0, 0.0, 1.0,
-
-		 -0.1, 0.1, -0.1,	1.0, 1.0, 0.0,
-		 0.1, 0.1, -0.1,	 0.0, 1.0, 1.0,
-		 -0.1, 0.1, 0.1,	0.5, 0.0, 1.0,
-		 0.1, 0.1, 0.1,		 0.0, 0.5, 1.0,
+		 -0.1, -0.1, 0.1,
+		 -0.1, 0.1, 0.1,
+		 0.1, -0.1, 0.1,
+		 0.1, 0.1, 0.1,	
 	};
 
 	unsigned int index[] = {
-		0, 1,
-		2, 3,
-		4, 5,
+		1, 2, 3, 
+		1, 3, 4, 
 
-		6, 7, 8, // ¾Æ·§¸é
-		7, 9, 8,
+		5, 6, 4,
+		5, 4, 3, 
 
-		10, 13, 11, // À­¸é
-		10, 12, 13,
+		7, 8, 5,
+		8, 6, 5, 
 
-		11, 13, 7, // ¿ìÃø¸é
-		7, 13, 9,
+		2, 1, 7, 
+		1, 8, 7,
 
-		10, 6, 8, // ¿ÞÂÊ¸é
-		10, 8, 12,
+		1, 4, 8,
+		4, 6, 8, 
 
-		8, 9, 12, // µÞ¸é
-		9, 13, 12,
-
-		11, 7, 6, // ¾Õ¸é
-		10, 11, 6,
-
-		//================
-
-		15, 17, 18,
-		15, 16, 17,
-		14, 15, 18,
-		14, 16, 15,
-		14, 17, 16,
-		14, 18, 17,
+		2, 7, 5, 
+		2, 5, 3,
 	};
 
 	glGenVertexArrays(1, &VAO); //--- VAO ¸¦ ÁöÁ¤ÇÏ°í ÇÒ´çÇÏ±â
@@ -248,11 +228,8 @@ void InitBuffer()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), index, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
 
 	//=============================================================================================
 
@@ -324,7 +301,7 @@ GLvoid drawScene()
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
 
 	if (t_shape == 0)
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (GLvoid*)(sizeof(GLuint) * 6));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 	else {
 
 		gluCylinder(qobj, 0.1, 0.1, 0.2, 10, 8);

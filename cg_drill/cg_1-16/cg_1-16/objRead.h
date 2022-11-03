@@ -1,6 +1,12 @@
 #pragma once
 #include "stdafx.h"
 
+struct pos {
+	GLfloat x;
+	GLfloat y;
+	GLfloat z;
+};
+
 struct objRead {
 
 	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
@@ -9,6 +15,8 @@ struct objRead {
 	std::vector< glm::vec3 > temp_normals;
 	std::vector< glm::vec3 > outvertex, outnormal;
 	std::vector< glm::vec2 > outuv;
+	std::vector<pos> nr_outvertex;
+
 
 	float sumX = 0.0, sumY = 0.0, sumZ = 0.0;
 	float aveX, aveY, aveZ;

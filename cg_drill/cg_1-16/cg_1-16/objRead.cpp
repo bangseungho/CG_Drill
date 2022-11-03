@@ -80,6 +80,19 @@ int objRead::loadObj_normalize_center(const char* filename)
 
 	//std::cout << "scaleX: " << scaleX << " scaleY: " << scaleY << " scaleZ: " << scaleZ << std::endl;
 
+	for (unsigned int i = 0; i < 8; i++) {
+		temp = temp_vertices[i];
+		temp.x = temp.x - minX;
+		temp.y = temp.y - minY;
+		temp.z = temp.z - minZ;
+
+		temp.x = ((temp.x * 2.0f) / scaleX) - 1.0f;
+		temp.y = ((temp.y * 2.0f) / scaleY) - 1.0f;
+		temp.z = ((temp.z * 2.0f) / scaleZ) - 1.0f;
+
+		nr_outvertex.push_back({temp.x, temp.y, temp.z});
+	}
+
 	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
 		unsigned int vertexIndex = vertexIndices[i];
 		temp = temp_vertices[vertexIndex - 1];
