@@ -144,7 +144,7 @@ public:
 		glDrawArrays(GL_LINES, 0, 6);
 	}
 };
-
+static int drawcnt = 0;
 class Obj : public Object
 {
 	objRead objReader;
@@ -160,7 +160,7 @@ public:
 	}
 
 	GLvoid setcolor() {
-		for (int i{}; i < objReader.outvertex.size(); ++i) {
+		for (int i{}; i < objReader.nr_outvertex.size(); ++i) {
 			colors.push_back({ urd(dre), urd(dre), urd(dre) });
 		}
 	}
@@ -176,7 +176,7 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, objReader.nr_outvertex.size() * sizeof(glm::vec3), &objReader.nr_outvertex[0], GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, objReader.vertexIndices.size(), &objReader.vertexIndices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, objReader.vertexIndices.size() * sizeof(glm::vec3), &objReader.vertexIndices[0], GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
@@ -184,7 +184,7 @@ public:
 		glGenBuffers(1, &vbo_color);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
-		glBufferData(GL_ARRAY_BUFFER, objReader.outvertex.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, objReader.nr_outvertex.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
 		GLint cAttribute = glGetAttribLocation(obj1_s_program, "vColor");
 		glVertexAttribPointer(cAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(cAttribute);
@@ -197,13 +197,12 @@ public:
 		unsigned int obj1_modelLocation = glGetUniformLocation(s_program, modelTransform);
 		glUniformMatrix4fv(obj1_modelLocation, 1, GL_FALSE, glm::value_ptr(SRT));
 		glPointSize(10);
-		glDrawElements(GL_POINTS, 2, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, obj, GL_UNSIGNED_INT, 0);
 	}
 };
 
 Line line;
 Obj hexi;
-Obj dragonLee;
 
 char* filetobuf(const char* file)
 {
@@ -306,45 +305,11 @@ void InitShader()
 	glDeleteShader(fragmentshader);
 }
 
-GLuint VAO, VBO, EBO;
-
-GLfloat v[24] = {
-	0.3, 0.3, -0.3,
-	0.3, -0.3, -0.3,
-	-0.3, -0.3, -0.3,
-	-0.3, 0.3, -0.3,
-
-	-0.3, -0.3, 0.3,
-	-0.3, 0.3, 0.3,
-	0.3, -0.3, 0.3,
-	0.3, 0.3, 0.3
-};
-
-unsigned int index[] = {
-	1, 2, 3, 
-	1, 3, 4, 
-
-	5, 6, 4, 
-	5, 4, 3, 
-
-	7, 8, 5, 
-	8, 6, 5, 
-
-	2, 1, 7, 
-	1, 8, 7, 
-
-	1, 4, 8, 
-	4, 6, 8, 
-
-	2, 7, 5, 
-	2, 5, 3
-};
-
 void InitBuffer()
 {
 
 	//--- line vbo
-	//line.set_vbo();
+	line.set_vbo();
 
 	//--- obj
 	hexi.set_vbo();
@@ -352,8 +317,6 @@ void InitBuffer()
 	glEnable(GL_DEPTH_TEST);
 	glBindVertexArray(0);
 }
-
-glm::mat4 R = glm::mat4(1.0f); // 회전 변환
 
 GLvoid drawScene()
 {
@@ -389,7 +352,7 @@ void Keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'q':
-		exit(1);
+		drawcnt	+= 3;
 		break;
 	}
 }
