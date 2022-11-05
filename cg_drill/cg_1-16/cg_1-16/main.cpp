@@ -261,8 +261,7 @@ public:
 //		cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 //		cameraDirection = glm::normalize(cameraPos - cameraTarget);
 //		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-//		glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-//		glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+//		glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));//		glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 //	}
 //
 //	GLvoid set_cameraPos(glm::vec3 value) {
@@ -603,9 +602,7 @@ void TimerFunction(int value)
 	// rotation to up
 	if (rotation_up) {
 		nR = glm::rotate(nR, glm::radians(1.0f), glm::vec3(1, 0, 0));
-	}
-
-	// open to front
+	}	// open to front
 	if (open_front) {
 		if (hexi[front].get_translate()._posY < 1.99)
 			hexi[front].translate(0, 0.01, 0);
