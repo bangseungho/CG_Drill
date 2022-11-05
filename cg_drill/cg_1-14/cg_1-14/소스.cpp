@@ -252,10 +252,11 @@ glm::mat4 CR = glm::mat4(1.0f); //--- 회전 행렬 선언
 glm::mat4 CT = glm::mat4(1.0f); //--- 이동 행렬 선언
 glm::mat4 CTR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
-
 glm::mat4 lR = glm::mat4(1.0f); //--- 회전 행렬 선언
 glm::mat4 lT = glm::mat4(1.0f); //--- 이동 행렬 선언
 glm::mat4 lTR = glm::mat4(1.0f); //--- 합성 변환 행렬
+
+glm::mat4 nTR = glm::mat4(1.0f); //--- 합성 변환 행렬
 
 GLvoid drawScene()
 {
@@ -283,7 +284,7 @@ GLvoid drawScene()
 	glUniformMatrix4fv(coord_modelLocation, 1, GL_FALSE, glm::value_ptr(CTR));
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 
-	TR = CR * T * R;
+	TR = nTR * T * R;
 	glUseProgram(s_program);
 	unsigned int modelLocation = glGetUniformLocation(s_program, "modelTransform");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(TR));
@@ -404,8 +405,10 @@ void Keyboard(unsigned char key, int x, int y)
 		else {
 			t_shape = 1;
 		}
-
-
+	case 'd':
+	{
+		nTR = glm::rotate(nTR, glm::radians(10.0f), glm::vec3(1.0, 0.0, 0.0));
+	}
 		break;
 	case 's':
 		reset = true;

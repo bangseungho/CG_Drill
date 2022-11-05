@@ -32,6 +32,9 @@
     <None Include="obj1_vertex.glsl">
       <Filter>소스 파일</Filter>
     </None>
+    <None Include="camera_vertex.glsl">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="objRead.h">

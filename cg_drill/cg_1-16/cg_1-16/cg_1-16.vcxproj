@@ -133,6 +133,7 @@
     <ClCompile Include="objRead.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="camera_vertex.glsl" />
     <None Include="coord_vertex.glsl" />
     <None Include="fragment.glsl" />
     <None Include="obj1_vertex.glsl" />
