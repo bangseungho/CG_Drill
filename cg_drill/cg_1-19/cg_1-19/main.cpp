@@ -215,19 +215,15 @@ public:
 	}
 
 	void dir_rotate(GLfloat degree) {
-		dir_R_degree += degree;
+		//dir_R_degree += degree;
 	}
 
 	void dir_translate(glm::vec3 trans) {
-		dir_T_trans.x += trans.x;
-		dir_T_trans.y += trans.y;
-		dir_T_trans.z += trans.z;
+		//dir_T_trans += trans;
 	}
 
 	void translate(glm::vec3 trans) {
-		T_trans.x += trans.x;
-		T_trans.y += trans.y;
-		T_trans.z += trans.z;
+		//T_trans += trans;
 	}
 
 	void setting(glm::vec4 Pos_pivot, glm::vec4 Dir_pivot, glm::vec3 Up_pivot) {
