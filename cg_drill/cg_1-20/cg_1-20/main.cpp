@@ -1,39 +1,40 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "stdafx.h"
 #include "objRead.h"
+#include "camera.h"
 
+using namespace glm;
 using namespace std;
 
-GLuint win_width = 1000;
-GLuint win_height = 1000;
+GLuint win_width = 1920;
+GLuint win_height = 1080;
+GLfloat aspect_ratio{};
 GLfloat mx;
 GLfloat my;
 
 random_device rd;
 default_random_engine dre(rd());
-uniform_real_distribution<float> urd{ 0.0, 1.0 };
+uniform_real_distribution<float> urd_color{ 0.2, 1.0 };
+uniform_real_distribution<float> urd_speed{ 0.2, 1.0 };
 
 GLvoid Reshape(int w, int h);
 GLvoid convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
 
-struct Vec3d
-{
-	GLfloat _posX;
-	GLfloat _posY;
-	GLfloat _posZ;
-};
+Camera* camera;
+Camera fps_camera(vec3(0.0f, 0.0f, 0.0f));
+Camera quater_camera(vec3(0.0f, 6.0f, 10.0f));
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
-struct Color
-{
-	GLfloat	_r;
-	GLfloat	_g;
-	GLfloat	_b;
-};
+static int width_num = 20;
+static int height_num = 20;
 
-struct Vertice
-{
-	Vec3d _pos;
-	Color _color;
+enum class Keyboard_Event {
+	KEYUP,
+	FOWARD,
+	BACKWARD,
+	LEFT,
+	RIGHT
 };
 
 char* filetobuf(const char* file)
@@ -155,7 +156,7 @@ void InitShader()
 	temp_f_shader.delete_shader();
 }
 
-class Camera {
+class Cameratemp {
 	glm::vec4 pivot;
 	glm::vec4 target;
 
@@ -168,35 +169,55 @@ class Camera {
 	glm::vec4 final_dir_transform;
 
 	GLfloat rotate_degree;
-	glm::vec3 translate;
+	glm::vec3 translate_amount;
 
 	GLfloat dir_rotate_degree;
-	glm::vec3 dir_translate;
+	glm::vec3 dir_translate_amount;
 
+	
 public:
-	Camera() {
+	Cameratemp(glm::vec4 pos_pivot, glm::vec4 target_pivot) : pivot{ pos_pivot }, target{target_pivot}{
 
 	}
 
+	void set_pivot(glm::vec4 trans) {
+		this->pivot = trans;
+	}
+
+	void set_target(glm::vec4 target) {
+		this->target = target;
+	}
+
+	void reset_pivot() {
+		pivot = vec4(0);
+	}
+
 	void translate(glm::vec3 trans) {
-		translate += trans;
+		translate_amount += trans;
+	}
+
+	void set_translate(glm::vec3 trans) {
+		translate_amount = trans;
 	}
 
 	void rotate(GLfloat degree) {
 		rotate_degree += degree;
 	}
 
+	void set_dir_translate(glm::vec3 trans) {
+		target = (vec4(0.0, 0.0, -3.0, 1.0));
+		dir_translate_amount = trans;
+	}
+
 	void dir_translate(glm::vec3 trans) {
-		dir_translate += trans;
+		dir_translate_amount += trans;
 	}
 
 	void dir_rotate(GLfloat degree) {
 		dir_rotate_degree += degree;
 	}
 
-	void setting(glm::vec4 pos_pivot, glm::vec4 target_pivot, glm::vec3 up_pivot) {
-		pivot = pos_pivot;
-		target = target_pivot;
+	void setting(glm::vec3 up_pivot) {
 		Up = up_pivot;
 
 		final_transform = glm::vec4(pivot);
@@ -204,11 +225,12 @@ public:
 
 		glm::mat4 trans = glm::mat4(1.0f);
 		trans = glm::rotate(trans, glm::radians(rotate_degree), glm::vec3(0.0, 1.0, 0.0));
-		trans = glm::translate(trans, glm::vec3(translate));
+		trans = glm::translate(trans, glm::vec3(translate_amount));
 		final_transform = trans * final_transform;
 
 		glm::mat4 dir_trans = glm::mat4(1.0f);
-		dir_trans = glm::translate(dir_trans, glm::vec3(dir_translate));
+		dir_trans = glm::translate(dir_trans, glm::vec3(dir_translate_amount));
+		dir_trans = glm::rotate(dir_trans, (GLfloat)glm::radians(dir_rotate_degree), glm::vec3(0.0, 1.0, 0.0));
 		dir_trans = glm::rotate(dir_trans, (GLfloat)glm::radians(dir_rotate_degree), glm::vec3(0.0, 1.0, 0.0));
 		final_dir_transform = trans * dir_trans * final_dir_transform;
 
@@ -223,29 +245,88 @@ public:
 	}
 };
 
+struct Color
+{
+	GLfloat	_r;
+	GLfloat	_g;
+	GLfloat	_b;
+};
+
+enum class Type {
+	wall,
+	load,
+	past_load,
+	start_point,
+	end_point,
+	crush_wall,
+};
+
 class Object
 {
-	glm::vec4 pivot;
+	vec3 world_position;
+	vec3 local_position;
+
+	vec3 world_scale;
+	vec3 local_scale;
+
+	vec3 world_rotation;
+	vec3 local_rotation;
+
+	vec4 world_pivot;
+	vec4 local_pivot;
+
+	mat4 model;
+
+	vector<Color> colors;
+
+	glm::mat4 final_transform;
+
+	glm::vec4 cur_loc;
+
+	objRead objReader;
+	GLint obj;
+	unsigned int modelLocation;
+	const char* modelTransform;
+
+	GLfloat height_randValue;
+	GLfloat falling_speed;
+	GLfloat grow_speed;
+
+	bool start_animation = true;
+	int grow = 1;
+
+	Type type = Type::wall;
+	bool check_load = false;
+
+	//======================VAO, VBO========================//
 	GLuint vao;
 	GLuint ebo;
 	GLuint vbo_position;
 	GLuint vbo_normal;
 	GLuint vbo_color;
-	vector<Color> colors;
 
-	objRead objReader; 
-	GLint obj;
 
-	unsigned int modelLocation;
-	const char* modelTransform;
-	
 public:
-	Object(const char* modelTransform, const char* objfile) {
-		obj = objReader.loadObj_normalize_center(objfile);
-		this->modelTransform = modelTransform;
+	Object* next_cube;
+	Object(vec4 pivot) {
+		world_pivot = local_pivot = vec4(0);
+		world_position = local_position = vec3(0);
+		world_rotation = local_rotation = vec3(0);
+		world_scale = local_scale = vec3(1);
+		local_pivot = pivot;
+		final_transform = mat4(1);
+		next_cube = nullptr;
 
+		obj = objReader.loadObj_normalize_center("cube.obj");
+		this->modelTransform = "obj1_modelTransform";
+		height_randValue = urd_speed(dre);
+		falling_speed = urd_speed(dre);
+		grow_speed = urd_speed(dre);
+		GLfloat red_color = urd_color(dre);
+		GLfloat green_color = urd_color(dre);
+		GLfloat blue_color = urd_color(dre);
 		for (int i{}; i < objReader.nr_outvertex.size(); ++i) {
-			colors.push_back({ urd(dre), urd(dre), urd(dre) });
+			colors.push_back({ red_color, green_color, blue_color });
 		}
 	}
 	~Object() {
@@ -254,7 +335,7 @@ public:
 
 	GLvoid set_vbo() {
 		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao); //--- VAO를 바인드하기
+		glBindVertexArray(vao);
 
 		glGenBuffers(1, &ebo);
 		glGenBuffers(1, &vbo_position);
@@ -277,12 +358,705 @@ public:
 		glEnableVertexAttribArray(cAttribute);
 	}
 
-	GLvoid draw(GLuint s_program) {
-		glUseProgram(s_program);
-		glBindVertexArray(vao); //--- VAO를 바인드하기
-		unsigned int obj1_modelLocation = glGetUniformLocation(s_program, modelTransform);
-		glUniformMatrix4fv(obj1_modelLocation, 1, GL_FALSE, glm::value_ptr(SRT));
+	void rotate(vec3 degree) {
+		world_rotation.x += degree.x;
+		world_rotation.y += degree.y;
+		world_rotation.z += degree.z;
+	}
+
+	void translate(glm::vec3 trans) {
+		world_position += trans;
+	}
+
+	void set_translate(glm::vec3 trans) {
+		world_position = trans;
+	}
+
+	void scale(glm::vec3 scale) {
+		world_scale = scale;
+	}
+
+	void lrotate(vec3 degree) {
+		local_rotation.x += degree.x;
+		local_rotation.y += degree.y;
+		local_rotation.z += degree.z;
+	}
+
+	void ltranslate(glm::vec3 trans) {
+		local_position += trans;
+	}
+
+	void lscale(glm::vec3 scale) {
+		local_scale = scale;
+	}
+
+	void set_type(Type type) {
+		this->type = type;
+	}
+
+	Type get_type() {
+		return type;
+	}
+
+	void setting() {
+		mat4 local_model = mat4(1.0);
+		mat4 world_model = mat4(1.0);
+
+		local_model = glm::translate(local_model, vec3(local_position));
+		local_model = glm::rotate(local_model, radians(local_rotation.x), glm::vec3(1.0, 0.0, 0.0));
+		local_model = glm::rotate(local_model, radians(local_rotation.y), glm::vec3(0.0, 1.0, 0.0));
+		local_model = glm::rotate(local_model, radians(local_rotation.z), glm::vec3(0.0, 0.0, 1.0));
+		local_model = glm::translate(local_model, vec3(local_pivot));
+		local_model = glm::scale(local_model, vec3(local_scale));
+
+		world_model = glm::translate(world_model, vec3(world_position));
+		world_model = glm::rotate(world_model, radians(world_rotation.x), glm::vec3(1.0, 0.0, 0.0));
+		world_model = glm::rotate(world_model, radians(world_rotation.y), glm::vec3(0.0, 1.0, 0.0));
+		world_model = glm::rotate(world_model, radians(world_rotation.z), glm::vec3(0.0, 0.0, 1.0));
+		world_model = glm::translate(world_model, vec3(world_pivot));
+		world_model = glm::scale(world_model, vec3(world_scale));
+
+		cur_loc = local_pivot;
+		cur_loc = world_model * cur_loc;
+		final_transform = world_model * local_model;
+	}
+
+	glm::vec4 get_cur_loc() const {
+		return cur_loc;
+	}
+
+	GLfloat get_height_randValue() const {
+		return height_randValue;
+	}
+
+	GLfloat get_falling_speed() const {
+		return falling_speed / 10;
+	}
+
+	bool get_start_animation() const {
+		return start_animation;
+	}
+
+	GLfloat get_grow_speed() const {
+		return grow_speed;
+	}
+
+	void add_sub_grow_speed(GLfloat value) {
+		grow_speed += value;
+	}
+
+	void print_cur_loc() const {
+		//cout << "x: " << cur_loc.x << " " << "y: " << cur_loc.y << " " << "z: " << cur_loc.z << endl;
+		//cout << "y: " << cur_loc.y - height_randValue << endl;
+		cout << "y: " << local_scale.y << endl;
+	}
+
+	void set_start_animation() {
+		start_animation = false;
+	}
+
+	void reset_scale() {
+	}
+
+	void grow_cube(vec3 grow_value) {
+		if (local_scale.y > 1.5f or local_scale.y < 0)
+			grow *= -1;
+		local_scale.x += grow * grow_value.x;
+		local_scale.y += grow * grow_value.y;
+		local_scale.z += grow * grow_value.z;
+		local_position.x += grow * grow_value.x;
+		local_position.y += grow * grow_value.y;
+		local_position.z += grow * grow_value.z;
+	}
+
+	void low_cube(vec3 grow_value) {
+		if (local_scale.y > 0.2) {
+			local_scale.x += grow_value.x;
+			local_scale.y += grow_value.y;
+			local_scale.z += grow_value.z;
+			local_position.x += grow_value.x;
+			local_position.y += grow_value.y;
+			local_position.z += grow_value.z;
+		}
+	}
+
+	GLvoid draw(ShaderProgram s_program, Camera cam, glm::mat4& projection) {
+		glUseProgram(s_program.getSprogram());
+		glBindVertexArray(vao);
+		unsigned int obj1_modelLocation = glGetUniformLocation(s_program.getSprogram(), modelTransform);
+		glUniformMatrix4fv(obj1_modelLocation, 1, GL_FALSE, glm::value_ptr(final_transform));
 		glPointSize(10);
+		unsigned int viewLocation_obj1 = glGetUniformLocation(s_program.getSprogram(), "viewTransform"); //--- 뷰잉 변환 설정
+		unsigned int projLoc_obj1 = glGetUniformLocation(s_program.getSprogram(), "projection");
+		glUniformMatrix4fv(viewLocation_obj1, 1, GL_FALSE, &cam.GetViewMatrix()[0][0]);
+		glUniformMatrix4fv(projLoc_obj1, 1, GL_FALSE, &projection[0][0]);
 		glDrawElements(GL_TRIANGLES, obj, GL_UNSIGNED_INT, 0);
 	}
 };
+
+vector<vector<Object>> cube;
+Object player(Object{ glm::vec4(0.0f) });
+Object plane(Object{ glm::vec4(0.0f) });
+Cameratemp cam_1{{ 0.0, 5.0, 6.0, 1.0 }, { 0.0, 0.0, -3.0, 1.0 }};
+
+void InitBuffer()
+{
+	for (int i = 0; i < width_num; ++i) {
+		for (int j = 0; j < height_num; ++j) {
+			cube[i][j].set_vbo();
+		}
+	}
+	player.set_vbo();
+	plane.set_vbo();
+
+	glEnable(GL_DEPTH_TEST);
+	glBindVertexArray(0);
+}
+
+bool isProjection = true;
+bool isMove = false;
+bool isCamMove = false;
+bool islowHeight = false;
+bool create_player = false;
+bool cam_fps = false;
+
+GLvoid display()
+{
+	float currentFrame = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
+	deltaTime = (currentFrame - lastFrame) / 1000;
+	lastFrame = currentFrame;
+	
+	//====================set viewport======================//
+	//glViewport(0, 0, win_width, win_height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//=====================set cam_1, projection=============//
+	cam_1.setting({ 0.0, 1.0, 0.0 });
+	glm::mat4 projection = glm::mat4(1.0f);
+	unsigned int projLoc_coord = glGetUniformLocation(coord_s_program.getSprogram(), "projection");
+
+	glm::mat4 view = camera->GetViewMatrix();
+
+	//===================set cooordinate====================//
+	if (isProjection)
+		projection = glm::perspective(glm::radians(60.0f), aspect_ratio, 0.1f, 100.0f);
+	else
+		projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -2.0f, 100.0f);
+	glUseProgram(coord_s_program.getSprogram());
+	unsigned int viewLocation_coord = glGetUniformLocation(coord_s_program.getSprogram(), "viewTransform"); //--- 뷰잉 변환 설정
+	glUniformMatrix4fv(viewLocation_coord, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(projLoc_coord, 1, GL_FALSE, &projection[0][0]);
+	glDrawArrays(GL_LINES, 0, 6);
+
+	//======================set object======================//
+	for (auto& n : cube) {
+		for (auto& val : n) {
+			if (val.get_type() == Type::wall or val.get_type() == Type::crush_wall) {
+				val.setting();
+				val.draw(obj1_s_program, *camera, projection);
+			}
+		}
+	}
+
+	if (create_player) {
+		player.setting();
+		player.draw(obj1_s_program, *camera, projection);
+	}
+
+		plane.setting();
+		plane.draw(obj1_s_program, *camera, projection);
+
+	//======================set mode========================//
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glutSwapBuffers();
+}
+
+GLvoid Reshape(int w, int h)
+{
+	if (h == 0)
+		h = 1;
+	aspect_ratio = GLfloat(w) / h;
+	glViewport(0, 0, w, h);
+}
+
+static int arrive_cnt = 0;
+
+inline void load_all_cube() {
+	for (auto& n : cube) {
+		for (auto& val : n) {
+			val.set_type(Type::crush_wall);
+		}
+	}
+}
+
+inline void set_border_cube() {
+	for (int i = 0; i < width_num; ++i) {
+		cube[i][0].set_type(Type::wall);
+		cube[i][height_num - 1].set_type(Type::wall);
+	}
+	for (int i = 0; i < height_num; ++i) {
+		cube[width_num - 1][i].set_type(Type::wall);
+		cube[0][i].set_type(Type::wall);
+	}
+
+}
+
+static int start_x = -1;
+static int start_y = -1;
+static int fstart_x = -1;
+static int fstart_y = -1;
+
+inline void set_start_end() {
+	uniform_int_distribution<int> uid{ 1, width_num - 2 };
+	cube[uid(dre)][height_num - 1].set_type(Type::start_point);
+	cube[uid(dre)][0].set_type(Type::end_point);
+
+	for (int y = 0; y < height_num; ++y) {
+		for (int x = 0; x < width_num; ++x) {
+			if (cube[x][y].get_type() == Type::start_point) {
+				start_x = x;
+				start_y = y;
+				fstart_x = x;
+				fstart_y = y;
+				break;
+			}
+		}
+	}
+
+	for (int y = 0; y < height_num; ++y) {
+		for (int x = 0; x < width_num; ++x) {
+			if (cube[x][y].get_type() == Type::end_point) {
+				cube[x][y + 1].set_type(Type::load);
+				break;
+			}
+		}
+	}
+}
+
+enum Dir {
+	left,
+	right,
+	top,
+	bottom,
+};
+
+void set_mage() {
+
+	int reset_cnt = 0;
+
+
+	while (true) {
+		uniform_int_distribution<int> uid_dir{ 0, 4 };
+		int randvalue = uid_dir(dre);
+
+
+		switch (randvalue)
+		{
+		case Dir::left:
+			if (start_x == 0) break;
+
+			cube[start_x][start_y].next_cube = &cube[start_x - 1][start_y];
+			if (cube[start_x][start_y].next_cube->get_type() == Type::end_point) return;
+
+			if (cube[start_x][start_y].next_cube->get_type() == Type::wall) {
+				reset_cnt++;
+				break;
+			}
+
+			reset_cnt = 0;
+			cube[start_x][start_y].set_type(Type::load);
+			start_x -= 1;
+			break;
+		case Dir::right:
+
+			if (start_x == width_num - 1) break;
+
+			cube[start_x][start_y].next_cube = &cube[start_x + 1][start_y];
+			if (cube[start_x][start_y].next_cube->get_type() == Type::end_point) return;
+
+			if (cube[start_x][start_y].next_cube->get_type() == Type::wall) {
+				reset_cnt++;
+				break;
+			}
+
+			reset_cnt = 0;
+			cube[start_x][start_y].set_type(Type::load);
+			start_x += 1;
+			break;
+		case Dir::top:
+
+			if (start_y == 0) break;
+
+			cube[start_x][start_y].next_cube = &cube[start_x][start_y - 1];
+			if (cube[start_x][start_y].next_cube->get_type() == Type::end_point) return;
+
+			if (cube[start_x][start_y].next_cube->get_type() == Type::wall) {
+				reset_cnt++;
+				break;
+			};
+			reset_cnt = 0;
+
+			cube[start_x][start_y].set_type(Type::load);
+			start_y -= 1;
+			break;
+		case Dir::bottom:
+
+			if (start_x == height_num - 1) break;
+
+			cube[start_x][start_y].next_cube = &cube[start_x][start_y + 1];
+			if (cube[start_x][start_y].next_cube->get_type() == Type::end_point) return;
+
+			if (cube[start_x][start_y].next_cube->get_type() == Type::wall) {
+				reset_cnt++;
+				break;
+			}
+			reset_cnt = 0;
+			cube[start_x][start_y].set_type(Type::load);
+			start_y += 1;
+			break;
+		}
+
+		if (reset_cnt > 1) {
+			load_all_cube();
+			set_border_cube();
+			set_start_end();
+			//cout << "Roading the Mage..." << endl;
+		}
+
+		if (cube[start_x + 1][start_y].get_type() == Type::wall &&
+			cube[start_x - 1][start_y].get_type() == Type::wall &&
+			cube[start_x][start_y + 1].get_type() == Type::wall &&
+			cube[start_x][start_y - 1].get_type() == Type::wall )
+		{
+			load_all_cube();
+			set_border_cube();
+			set_start_end();
+		}
+
+
+	}
+
+	std::cout << "x : " << start_x << " " << "y: " << start_y << endl;
+
+}
+
+void make_mage() {
+
+	load_all_cube();
+
+	set_border_cube();
+
+	set_start_end();
+
+	set_mage();
+
+}
+
+static Keyboard_Event key_down;
+
+void Keyboard(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 'L':
+	case 'l':
+		//for (auto it = cube.begin(); it != cube.end(); ++it)
+		//	it->print_cur_loc();
+		//cout << arrive_cnt << endl;
+		break;
+	case 'p':
+	case 'P':
+		isProjection = true;
+		break;
+	case 'o':
+	case 'O':
+		isProjection = false;
+		break;
+	case 'm':
+	case 'M':
+		isMove = isMove ? false : true;
+		islowHeight = false;
+		break;
+	case 'y':
+	case 'Y':
+		isCamMove = isCamMove ? false : true;
+		break;
+	case 'v':
+	case 'V':
+		if (islowHeight) {
+			isMove = true;
+			islowHeight = false;
+		}
+		else {
+			isMove = false;
+			islowHeight = true;
+		}
+		break;
+	case 'r':
+	case 'R':
+		make_mage();
+		break;
+	case 'q':
+	case 'Q':
+		exit(1);
+		break;
+	case '+':
+		for (auto& n : cube) {
+			for (auto& val : n) {
+				val.add_sub_grow_speed(0.3);
+			}
+		}
+		break;
+	case '-':
+		for (auto& n : cube) {
+			for (auto& val : n) {
+				if (val.get_grow_speed() > 0.3)
+					val.add_sub_grow_speed(-0.3);
+			}
+		}
+		break;
+	case 'C':
+	case 'c':
+		create_player = true;
+		player.lscale(vec3(0.05, 0.05, 0.05));
+		cout << cube[fstart_x][fstart_y].get_cur_loc().x << endl;
+		player.translate(vec3(cube[fstart_x][fstart_y].get_cur_loc().x, 0.05, cube[fstart_x][fstart_y].get_cur_loc().z));
+		break;
+	case '1':
+		camera = &fps_camera;
+		camera->Position = vec3(cube[fstart_x][fstart_y].get_cur_loc().x, 0.1, cube[fstart_x][fstart_y].get_cur_loc().z);
+
+		/*cam_fps = true;
+		cam_1.reset_pivot();
+		cam_1.set_target(vec4(0));
+		cam_1.set_pivot(vec4(cube[fstart_x][fstart_y].get_cur_loc().x, 0.1, cube[fstart_x][fstart_y].get_cur_loc().z, 1));
+		cam_1.set_dir_translate(vec3(player.get_cur_loc().x, 0.05, player.get_cur_loc().z));*/
+		/*cout << player.get_cur_loc().x << " " << player.get_cur_loc().y << " " << player.get_cur_loc().z << endl;
+		cam_1.set_translate(vec3(cube[fstart_x][fstart_y].get_cur_loc().x, 3, cube[fstart_x][fstart_y].get_cur_loc().z));*/
+		
+		break;
+	case '3':
+		camera = &quater_camera;
+
+		//cam_fps = false;
+		//cam_1.set_pivot({ 0.0, 5.0, 6.0, 1.0 });
+		//cam_1.set_target({ 0.0, 0.0, -3.0, 1.0 });
+		break;
+	case 's':
+	case 'S':
+		key_down = Keyboard_Event::BACKWARD;
+		break;
+	case 'w':
+	case 'W':
+		key_down = Keyboard_Event::FOWARD;
+		break; 
+	case 'a':
+	case 'A':
+		key_down = Keyboard_Event::LEFT;
+		break;
+	case 'd':
+	case 'D':
+		key_down = Keyboard_Event::RIGHT;
+		break;
+	}
+
+	glutPostRedisplay();
+}
+
+void KeyboardUp(unsigned char key, int x, int y)
+{
+	key_down = Keyboard_Event::KEYUP;
+}
+
+void SpecialKeys(int key, int x, int y) {
+	switch (key) {
+	case GLUT_KEY_UP:
+		player.translate(vec3(0, 0, -0.01));
+		break;
+	case GLUT_KEY_DOWN:
+		player.translate(vec3(0, 0, 0.01));
+		break;
+	case GLUT_KEY_LEFT:
+		player.translate(vec3(-0.01, 0, 0));
+		break;
+	case GLUT_KEY_RIGHT:
+		player.translate(vec3(0.01, 0, 0));
+		break;
+		exit(1);
+	}
+}
+
+void MoveTimerFuction(int value) {
+	cout << player.get_cur_loc().x << " " << player.get_cur_loc().y << endl;
+
+	switch (key_down) {
+	case Keyboard_Event::FOWARD:
+		camera->ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+		fps_camera.Position.y = 0.2;
+		player.set_translate(fps_camera.Position);
+		break;
+	case Keyboard_Event::BACKWARD:
+		camera->ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+		fps_camera.Position.y = 0.1;
+		player.set_translate(fps_camera.Position);
+		break;
+	case Keyboard_Event::LEFT:
+		camera->ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+		fps_camera.Position.y = 0.1;
+		player.set_translate(fps_camera.Position);
+		break;
+	case Keyboard_Event::RIGHT:
+		camera->ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+		fps_camera.Position.y = 0.1;
+		player.set_translate(fps_camera.Position);
+		break;
+	}
+
+	glutTimerFunc(10, MoveTimerFuction, 1);
+}
+
+float lastX = win_width / 2.0;
+
+float lastY = win_height / 2.0;
+
+bool firstMouse = true;
+
+void PassiveMotion(int x, int y) {
+
+	float xpos = static_cast<float>(x);
+	float ypos = static_cast<float>(y);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; 
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera->ProcessMouseMovement(xoffset, yoffset);
+
+	if (x < 100 || x > win_width - 100) {  //you can use values other than 100 for the screen edges if you like, kind of seems to depend on your mouse sensitivity for what ends up working best
+		lastX = win_width / 2;   //centers the last known position, this way there isn't an odd jump with your cam as it resets
+		lastY = win_height / 2;
+		glutWarpPointer(win_width / 2, win_height / 2);  //centers the cursor
+	}
+	else if (y < 100 || y > win_height - 100) {
+		lastX = win_width / 2;
+		lastY = win_height / 2;
+		glutWarpPointer(win_width / 2, win_height / 2);
+	}
+}
+
+void TimerFunction(int value)
+{
+	if (arrive_cnt < width_num * height_num) {
+		for (auto& n : cube) {
+			for (auto& val : n) {
+				if (val.get_start_animation())
+				{
+					if (val.get_cur_loc().y - val.get_height_randValue() > 0.0f) {
+						val.translate(glm::vec3(0.0f, -0.1, 0.0f));
+					}
+				}
+				if (val.get_cur_loc().y - val.get_height_randValue() < 0.0f) {
+					if (val.get_start_animation()) arrive_cnt += 1;
+					val.set_start_animation();
+					val.translate(glm::vec3(0.0f, -(val.get_cur_loc().y - val.get_height_randValue()), 0.0f));
+				}
+			}
+		}
+	}
+
+	if (isMove) {
+		for (auto& n : cube) {
+			for (auto& val : n) {
+				val.grow_cube(glm::vec3(0.0f, val.get_grow_speed() / 100, 0.0f));
+			}
+		}
+	}
+
+
+	if (isCamMove) {
+		//quater_camera.set_Pos(()
+	}
+
+	if (islowHeight) {
+		for (auto& n : cube) {
+			for (auto& val : n) {
+				val.low_cube(vec3(0, -0.1, 0));
+			}
+		}
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(1, TimerFunction, 1);
+}
+
+
+void Init()
+{
+	cube.resize(width_num);
+
+	for (int i = 0; i < width_num; ++i) {
+		for (int j = 0; j < height_num; ++j) {
+			cube[i].push_back(Object{ glm::vec4(2 * i - (width_num - 1), 50, 2 * j - (height_num - 1), 1) });
+		}
+	}
+
+	for (int i = 0; i < width_num; ++i) {
+		for (int j = 0; j < height_num; ++j) {
+			cube[i][j].scale(glm::vec3(0.2f, cube[i][j].get_height_randValue(), 0.2f));
+		}
+	}
+
+	plane.scale(glm::vec3(0.2f * width_num, 0.001f, 0.2f * height_num));
+
+	camera = &quater_camera;
+}
+
+
+void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
+{
+	while (true) {
+		cout << "input width_num : ";
+		cin >> width_num;
+		cout << "input height_num : ";
+		cin >> height_num;
+
+		if (width_num <= 22 and height_num <= 22) break;
+		else cout << "Please enter again. maximum is 22." << endl;
+		cout << width_num << " : " << height_num << endl;
+	}
+	//--- 윈도우 생성하기
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitWindowPosition(400, 200);
+	glutInitWindowSize(win_width, win_height);
+	glutCreateWindow("MOUNTAIN MAGE");
+	//--- GLEW 초기화하기
+	glClearColor(0.1, 0.1, 0.1, 1.0f);
+	glewExperimental = GL_TRUE;
+	glewInit();
+	Init();
+	InitShader();
+	InitBuffer();
+	glutDisplayFunc(display);
+	glutSetCursor(GLUT_CURSOR_NONE);
+	glutSpecialFunc(SpecialKeys);
+	//glutSpecialUpFunc(KeyUp);
+	//glutMotionFunc(MouseMotion);
+	glutPassiveMotionFunc(PassiveMotion);
+	glutKeyboardFunc(Keyboard);
+	//glutSpecialUpFunc(KeyUp);
+	glutKeyboardUpFunc(KeyboardUp);
+	glutTimerFunc(100, TimerFunction, 1);
+	glutTimerFunc(10, MoveTimerFuction, 1);
+	glutReshapeFunc(Reshape); 
+	glutMainLoop();
+}

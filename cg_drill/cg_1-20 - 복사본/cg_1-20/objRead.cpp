@@ -12,8 +12,8 @@ int objRead::loadObj_normalize_center(const char* filename)
 		return false;
 	}
 	while (1) {
-		char lineHeader[65535];
 
+		char lineHeader[65535];
 		// read the first word of the line
 		int res = fscanf(objFile, "%s", lineHeader);
 		if (res == EOF)
