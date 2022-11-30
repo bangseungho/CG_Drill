@@ -6,8 +6,8 @@
 using namespace glm;
 using namespace std;
 
-GLuint win_width = 1600;
-GLuint win_height = 800;
+GLuint win_width = 1920;
+GLuint win_height = 1080;
 static int width_num;
 static int height_num;
 GLfloat mx;
@@ -20,7 +20,7 @@ default_random_engine dre(rd());
 uniform_real_distribution<float> urd_color{ 0.2, 1.0 };
 uniform_real_distribution<float> urd_speed{ 0.2, 1.0 };
 uniform_real_distribution<float> urd_snow{ -2.0, 2.0 };
-uniform_real_distribution<float> drop_snow{ 0.001, 0.01 };
+uniform_real_distribution<float> drop_snow{ 0.01, 0.05 };
 uniform_int_distribution<int> uid{ 0, 1 };
 
 GLvoid Reshape(int w, int h);
@@ -192,6 +192,13 @@ struct Color
 	GLfloat	_b;
 };
 
+struct Vertice
+{
+	GLfloat	x;
+	GLfloat	y;
+	GLfloat	z;
+};
+
 enum class Type {
 	wall,
 	load,
@@ -224,6 +231,7 @@ public:
 
 	string name;
 
+	vector<Vertice> vertices;
 	vector<Color> colors;
 
 	glm::mat4 final_transform;
@@ -276,13 +284,56 @@ public:
 		GLfloat red_color = urd_color(dre);
 		GLfloat green_color = urd_color(dre);
 		GLfloat blue_color = urd_color(dre);
+
 		for (int i{}; i < obj; ++i) {
 			colors.push_back({ red_color, green_color, blue_color });
 		}
 
 	}
+	Object(string name) : name{ name } {
+		world_pivot = local_pivot = vec4(0);
+		world_position = local_position = vec3(0);
+		world_rotation = local_rotation = vec3(0);
+		world_scale = local_scale = vec3(1);
+		final_transform = mat4(1);
+		obj = 3;
+		GLfloat red_color = urd_color(dre);
+		GLfloat green_color = urd_color(dre);
+		GLfloat blue_color = urd_color(dre);
+
+		this->modelTransform = "obj1_modelTransform";
+
+		for (int i{}; i < obj * 100; ++i) {
+			colors.push_back({ 1.0, 0.5, 0.0 });
+		}
+
+		vertices.push_back({ 0, 1, 0 });
+		vertices.push_back({ 0.5, 0, 0 });
+		vertices.push_back({ -0.5, 0, 0 });
+
+	}
 	~Object() {
 
+	}
+	GLvoid quad_set_vbo() {
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO_position);
+		glGenBuffers(1, &VBO_color);
+		glGenBuffers(1, &VBO_normal);
+
+		glUseProgram(obj1_s_program.getSprogram());
+		glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+		glBufferData(GL_ARRAY_BUFFER, obj * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+		GLint pAttribute = glGetAttribLocation(obj1_s_program.getSprogram(), "vPos");
+		glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(pAttribute);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+		glBufferData(GL_ARRAY_BUFFER, obj * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+		GLint cAttribute = glGetAttribLocation(obj1_s_program.getSprogram(), "vColor");
+		glVertexAttribPointer(cAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(cAttribute);
 	}
 
 	GLvoid set_vbo() {
@@ -386,7 +437,46 @@ public:
 		cout << "y: " << local_scale.y << endl;
 	}
 
-	void reset_scale() {
+	void Sierpinsk(int n) {
+
+		if (n > 1)
+			Sierpinsk(n - 1);
+
+		for (int i = 0; i < obj / 3; ++i) {
+				float temp = (vertices[i * 3].y - vertices[i * 3 + 1].y);
+				vertices[i * 3 + 1].y += (vertices[i * 3].y - vertices[i * 3 + 1].y) / 2; // top
+				vertices[i * 3 + 1].x -= vertices[i * 3 + 1].x / 2; // top
+
+				vertices.push_back({ vertices[i * 3 + 1] }); // left
+
+				vertices[i * 3 + 2].y += (vertices[i * 3].y - vertices[i * 3 + 2].y) / 2; // top
+				vertices[i * 3 + 2].x -= vertices[i * 3 + 2].x / 2; // top
+
+				float len = abs(vertices[i * 3 + 1].x - vertices[i * 3 + 2].x);
+
+
+				vertices.push_back({ vertices[i * 3].x + len, vertices[i * 3].y - temp, 0 }); // left
+				vertices.push_back({ vertices[i * 3].x, vertices[i * 3].y - temp, 0 }); // left
+
+
+				vertices.push_back({ vertices[i * 3 + 2].x,  vertices[i * 3 + 2].y, 0}); // left
+
+				vertices.push_back({ vertices[i * 3].x, vertices[i * 3].y - temp, 0 }); // left
+
+				vertices.push_back({ vertices[i * 3].x - len , vertices[i * 3].y - temp, 0 }); // left
+		}
+
+		//vertices[1].y += vertices[0].y / 2;
+		//vertices[1].x -= vertices[1].x / 2;
+		//vertices.push_back({ vertices[3].x - vertices[1].x * 2, vertices[3].y, 0});
+
+		//vertices.push_back({ vertices[2] });
+		//vertices[2].y += vertices[0].y / 2;
+		//vertices[2].x -= vertices[2].x / 2;
+		//vertices.push_back({ vertices[2] });
+		//vertices.push_back({ vertices[3].x - vertices[1].x * 2, vertices[3].y, 0 });
+
+		obj *= 3;
 	}
 
 	GLvoid draw(ShaderProgram s_program, Camera cam, glm::mat4& projection) {
@@ -403,6 +493,8 @@ public:
 
 		if(name == "Orb")
 			glDrawArrays(GL_LINE_STRIP, 0, obj);
+		else if(name == "Quad")
+			glDrawArrays(GL_TRIANGLES, 0, obj);
 		else 
 			glDrawArrays(GL_TRIANGLES, 0, obj);
 	}
@@ -412,8 +504,14 @@ vector<Object*> allObject;
 vector<Object*> allOrbObject;
 vector<Object*> allSnowObject;
 vector<Object*> allStackSnowObject;
+vector<Object*> allquadObject;
 Object light_box(Object{ glm::vec4(0.0f), "Cube.obj", "light" });
-Object quad(Object{ glm::vec4(0.0f), "Quad.obj", "Quad" });
+Object quad(Object{"Quad" });
+Object quad1(Object{"Quad" });
+Object quad2(Object{"Quad" });
+Object quad3(Object{"Quad" });
+
+
 Object plane(Object{ glm::vec4(0.0f), "Cube.obj", "Plane" });
 Object mercury(Object{ glm::vec4(0.0f), "Sphere.obj", "Mercury" });
 Object venus(Object{ glm::vec4(0.0f), "Sphere.obj", "Venus" });
@@ -442,6 +540,13 @@ void InitBuffer()
 	for (auto& s : allStackSnowObject) {
 		s->set_vbo();
 	}
+
+	for (auto& t : allquadObject) {
+		t->quad_set_vbo();
+
+	}
+
+
 	light_box.set_vbo();
 
 	glEnable(GL_DEPTH_TEST);
@@ -502,24 +607,30 @@ GLvoid display()
 
 	//======================set object======================//
 
-	//for (auto& a : allObject) {
-	//	a->setting();
-	//	a->draw(obj1_s_program, *camera, projection);
-	//}
+	for (auto& a : allObject) {
+		a->setting();
+		a->draw(obj1_s_program, *camera, projection);
+	}
 	for (auto& a : allOrbObject) {
 		a->setting();
 		a->draw(obj1_s_program, *camera, projection);
 	}	
-	
-	for (auto& s : allSnowObject) {
-		s->setting();
-		s->draw(obj1_s_program, *camera, projection);
+	if (isSnow) {
+		for (auto& s : allSnowObject) {
+			s->setting();
+			s->draw(obj1_s_program, *camera, projection);
+		}
 	}
-
 	for (auto& s : allStackSnowObject) {
 		s->setting();
 		s->draw(obj1_s_program, *camera, projection);
 	}
+		
+	for (auto& t : allquadObject) {
+		t->setting();
+		t->draw(obj1_s_program, *camera, projection);
+	}
+	
 	light_box.setting();
 	light_box.draw(light_s_program, *camera, projection);
 
@@ -629,6 +740,13 @@ void Keyboard(unsigned char key, int x, int y)
 		else
 			light_source = vec3(urd_color(dre), urd_color(dre), urd_color(dre));
 		break;
+
+	case 'u':
+		for (auto& t : allquadObject) {
+			t->Sierpinsk(1);
+		}
+		InitBuffer();
+		break;
 	}
 
 	glutPostRedisplay();
@@ -681,20 +799,31 @@ void TimerFunction(int value)
 	earth.lrotate(vec3(0, 0.5, 0));
 	int cnt = 0;
 
-	for(int i =0; i<)
-
 	if (isSnow) {
-		for (auto& s : allSnowObject) {
-				s->world_position.y -= s->drop_speed;
-				if (s->cur_loc.y < 0) {
-					s->world_position.y = 4;
-					allStackSnowObject[cnt]->world_position.x = s->cur_loc.x;
-					allStackSnowObject[cnt]->world_position.z = s->cur_loc.z;
-					if (cnt == 500) cnt = 0;
-				}
-				cnt++;
+		for (int i = 0; i < 500; ++i) {
+			allSnowObject[i]->world_position.y -= allSnowObject[i]->drop_speed;
+			if (allSnowObject[i]->cur_loc.y < 1) {
+				allStackSnowObject[i]->world_position.x = allSnowObject[i]->cur_loc.x - 1;
+				allStackSnowObject[i]->world_position.z = allSnowObject[i]->cur_loc.z - 1;
+				allSnowObject[i]->world_pivot = vec4(0);
+				allSnowObject[i]->world_position = vec4(urd_snow(dre), 4, urd_snow(dre), 1);
+			}
 		}
 	}
+
+
+	//if (isSnow) {
+	//	for (auto& s : allSnowObject) {
+	//			s->world_position.y -= s->drop_speed;
+	//			if (s->cur_loc.y < 0) {
+	//				s->world_position.y = 4;
+	//				allStackSnowObject[cnt]->world_position.x = s->cur_loc.x;
+	//				allStackSnowObject[cnt]->world_position.z = s->cur_loc.z;
+	//				if (cnt == 500) cnt = 0;
+	//			}
+	//			cnt++;
+	//	}
+	//}
 
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
@@ -706,7 +835,6 @@ void Init()
 	camera = &quarter_camera;
 
 	allObject.push_back(&plane);
-	allObject.push_back(&quad);
 	allObject.push_back(&mercury);
 	allObject.push_back(&merc_orb);
 	allObject.push_back(&venus);
@@ -715,8 +843,27 @@ void Init()
 	allOrbObject.push_back(&venus_orb);
 	allOrbObject.push_back(&earth_orb);
 
+	allquadObject.push_back(&quad);
+	allquadObject.push_back(&quad1);
+	allquadObject.push_back(&quad2);
+	allquadObject.push_back(&quad3);
+
+	quad.world_position.z += 0.5;
+	quad.lrotate(vec3(-30, 0, 0));
+
+	quad2.world_position.z -= 0.5;
+	quad2.lrotate(vec3(30, 0, 0));
+
+	quad1.lrotate(vec3(0, 90, 0));
+	quad1.world_position.x += 0.5;
+	quad1.rotate(vec3(0, 0, 30));
+
+	quad3.lrotate(vec3(0, 90, 0));
+	quad3.world_position.x -= 0.5;
+	quad3.rotate(vec3(0, 0, -30));
+
 	for (int i = 0; i < 500; ++i) {
-		allSnowObject.push_back(new Object{ glm::vec4(urd_snow(dre), 4, urd_snow(dre), 0), "Snow" });
+		allSnowObject.push_back(new Object{ glm::vec4(urd_snow(dre), 4, urd_snow(dre), 1), "Snow" });
 		allStackSnowObject.push_back(new Object{ glm::vec4(0), "Snow" });
 		allSnowObject[i]->lscale(vec3(0.02));
 		allStackSnowObject[i]->lscale(vec3(0.02, 0.01, 0.02));
@@ -748,10 +895,10 @@ void Init()
 	earth_orb.rotate(vec3(0, 0, -55));
 
 
-	light_box.scale(vec3(0.1));
-	light_box.world_pivot.y += 1;
-	light_box.world_pivot.z += 2.5;
-	light_box.world_pivot.x -= 0.6;
+	light_box.scale(vec3(0.05));
+	light_box.world_pivot.y += 1.5;
+	light_box.world_pivot.z += 1.5;
+	light_box.world_pivot.x -= 0.0;
 }
 
 
