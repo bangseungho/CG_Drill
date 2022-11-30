@@ -7,9 +7,9 @@
 #include <list>
 #include "GL/glew.h"
 #include "GL/freeglut.h"
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <fstream>
 #include <sstream>

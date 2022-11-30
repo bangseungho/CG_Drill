@@ -389,7 +389,7 @@ public:
 	}
 };
 
-Object cube(Object{ glm::vec4(0.0f), "Cube.obj"});
+Object cube(Object{ glm::vec4(0.0f), "SPACESHIP_1.obj"});
 Object quad(Object{ glm::vec4(0.0f), "Quad.obj"});
 Object orb(Object{ glm::vec4(0.0f), "circle.obj"});
 Object light_box(Object{ glm::vec4(0.0f), "Cube.obj" });

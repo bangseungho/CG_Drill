@@ -6,8 +6,8 @@
 using namespace glm;
 using namespace std;
 
-GLuint win_width = 1920;
-GLuint win_height = 1000;
+GLuint win_width = 1600;
+GLuint win_height = 800;
 static int width_num;
 static int height_num;
 GLfloat mx;
@@ -19,6 +19,9 @@ random_device rd;
 default_random_engine dre(rd());
 uniform_real_distribution<float> urd_color{ 0.2, 1.0 };
 uniform_real_distribution<float> urd_speed{ 0.2, 1.0 };
+uniform_real_distribution<float> urd_snow{ -2.0, 2.0 };
+uniform_real_distribution<float> drop_snow{ 0.001, 0.01 };
+uniform_int_distribution<int> uid{ 0, 1 };
 
 GLvoid Reshape(int w, int h);
 GLvoid convertDeviceXYOpenGlXY(int x, int y, float* ox, float* oy);
@@ -198,6 +201,9 @@ enum class Type {
 	crush_wall,
 };
 
+static objRead snow_objReader;
+static GLint snow_obj = snow_objReader.loadObj_normalize_center("sphere.obj");
+
 class Object
 {
 public:
@@ -208,6 +214,7 @@ public:
 	vec3 local_scale;
 
 	vec3 world_rotation;
+	vec3 temp_rotation;
 	vec3 local_rotation;
 
 	vec4 world_pivot;
@@ -227,6 +234,7 @@ public:
 	GLint obj;
 	unsigned int modelLocation;
 	const char* modelTransform;
+	float drop_speed;
 
 	//======================VAO, VBO========================//
 	GLuint VAO;
@@ -235,8 +243,25 @@ public:
 	GLuint VBO_color;
 	GLuint lightCubeVAO;
 
-public:
 
+public:
+	Object(vec4 pivot, string name) : name{ name } {
+		world_pivot = local_pivot = vec4(0);
+		world_position = local_position = vec3(0);
+		world_rotation = local_rotation = vec3(0);
+		world_scale = local_scale = vec3(1);
+		world_pivot = pivot;
+		final_transform = mat4(1);
+		drop_speed = drop_snow(dre);
+		obj = snow_obj;
+		objReader = snow_objReader;
+
+		this->modelTransform = "obj1_modelTransform";
+
+		for (int i{}; i < obj; ++i) {
+			colors.push_back({ 1.0, 1.0, 1.0 });
+		}
+	}
 	Object(vec4 pivot, const char* objfile, string name) : name{ name } {
 		world_pivot = local_pivot = vec4(0);
 		world_position = local_position = vec3(0);
@@ -336,6 +361,7 @@ public:
 		local_model = glm::translate(local_model, vec3(local_pivot));
 		local_model = glm::scale(local_model, vec3(local_scale));
 
+		world_model = glm::rotate(world_model, radians(temp_rotation.y), glm::vec3(0.0, 1.0, 0.0));
 		world_model = glm::translate(world_model, vec3(world_position));
 		world_model = glm::rotate(world_model, radians(world_rotation.x), glm::vec3(1.0, 0.0, 0.0));
 		world_model = glm::rotate(world_model, radians(world_rotation.y), glm::vec3(0.0, 1.0, 0.0));
@@ -384,6 +410,8 @@ public:
 
 vector<Object*> allObject;
 vector<Object*> allOrbObject;
+vector<Object*> allSnowObject;
+vector<Object*> allStackSnowObject;
 Object light_box(Object{ glm::vec4(0.0f), "Cube.obj", "light" });
 Object quad(Object{ glm::vec4(0.0f), "Quad.obj", "Quad" });
 Object plane(Object{ glm::vec4(0.0f), "Cube.obj", "Plane" });
@@ -406,6 +434,14 @@ void InitBuffer()
 		a->set_vbo();
 	}
 
+	for (auto& s : allSnowObject) {
+		s->set_vbo();
+	}
+
+
+	for (auto& s : allStackSnowObject) {
+		s->set_vbo();
+	}
 	light_box.set_vbo();
 
 	glEnable(GL_DEPTH_TEST);
@@ -422,6 +458,7 @@ static int isFarOrigin = 0;
 static int isLightColor = 0;
 static int zMove = 0;
 static int xMove = 0;
+static int isSnow = 0;
 
 GLvoid display()
 {
@@ -465,15 +502,24 @@ GLvoid display()
 
 	//======================set object======================//
 
-	for (auto& a : allObject) {
-		a->setting();
-		a->draw(obj1_s_program, *camera, projection);
-	}
+	//for (auto& a : allObject) {
+	//	a->setting();
+	//	a->draw(obj1_s_program, *camera, projection);
+	//}
 	for (auto& a : allOrbObject) {
 		a->setting();
 		a->draw(obj1_s_program, *camera, projection);
+	}	
+	
+	for (auto& s : allSnowObject) {
+		s->setting();
+		s->draw(obj1_s_program, *camera, projection);
 	}
 
+	for (auto& s : allStackSnowObject) {
+		s->setting();
+		s->draw(obj1_s_program, *camera, projection);
+	}
 	light_box.setting();
 	light_box.draw(light_s_program, *camera, projection);
 
@@ -507,9 +553,6 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'p':
 	case 'P':
 		isProjection = true;
-		break;
-	case 'n':
-	case 'N':
 		break;
 	case 'm':
 	case 'M':
@@ -548,6 +591,19 @@ void Keyboard(unsigned char key, int x, int y)
 	case 's':
 	case 'S':
 		isLightRotation = 0;
+		break;
+	case 'n':
+	case 'N':
+		isSnow = isSnow ? false : true;
+		break;
+	case 'i':
+	case 'I':
+		isFarOrigin = (isFarOrigin + 1) % 3;
+		break;
+	case 'o':
+	case 'O':
+		light_box.world_position.x -= light_box.cur_loc.x / 100;
+		light_box.world_position.z -= light_box.cur_loc.z / 100;
 		break;
 	case 'y':
 	case 'Y':
@@ -618,9 +674,27 @@ void TimerFunction(int value)
 		degree++;
 	}
 
+	cout << light_box.cur_loc.x << " " << light_box.cur_loc.z << endl;
+
 	mercury.lrotate(vec3(0, 1.5, 0));
 	venus.lrotate(vec3(0, 1, 0));
 	earth.lrotate(vec3(0, 0.5, 0));
+	int cnt = 0;
+
+	for(int i =0; i<)
+
+	if (isSnow) {
+		for (auto& s : allSnowObject) {
+				s->world_position.y -= s->drop_speed;
+				if (s->cur_loc.y < 0) {
+					s->world_position.y = 4;
+					allStackSnowObject[cnt]->world_position.x = s->cur_loc.x;
+					allStackSnowObject[cnt]->world_position.z = s->cur_loc.z;
+					if (cnt == 500) cnt = 0;
+				}
+				cnt++;
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
@@ -641,6 +715,12 @@ void Init()
 	allOrbObject.push_back(&venus_orb);
 	allOrbObject.push_back(&earth_orb);
 
+	for (int i = 0; i < 500; ++i) {
+		allSnowObject.push_back(new Object{ glm::vec4(urd_snow(dre), 4, urd_snow(dre), 0), "Snow" });
+		allStackSnowObject.push_back(new Object{ glm::vec4(0), "Snow" });
+		allSnowObject[i]->lscale(vec3(0.02));
+		allStackSnowObject[i]->lscale(vec3(0.02, 0.01, 0.02));
+	}
 
 	plane.lscale(vec3(2.0, -0.0001, 2.0));
 	mercury.lscale(vec3(0.15));
@@ -669,7 +749,7 @@ void Init()
 
 
 	light_box.scale(vec3(0.1));
-	light_box.world_pivot.y += 3;
+	light_box.world_pivot.y += 1;
 	light_box.world_pivot.z += 2.5;
 	light_box.world_pivot.x -= 0.6;
 }
