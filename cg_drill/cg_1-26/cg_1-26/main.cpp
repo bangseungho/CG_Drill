@@ -394,7 +394,7 @@ public:
 	}
 
 	GLvoid draw(ShaderProgram s_program, Camera cam, glm::mat4& projection) {
-
+		glEnable(GL_BLEND);
 		unsigned int ortho_projection2 = glGetUniformLocation(s_program.getSprogram(), "projectionTransform");
 		projection = ortho(double(-aspect_ratio), double(aspect_ratio), -1.0, 1.0, -1.0, 1.0);
 		glUniformMatrix4fv(ortho_projection2, 1, GL_FALSE, &projection[0][0]);
@@ -408,6 +408,7 @@ public:
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDisable(GL_BLEND);
 	}
 };
 
